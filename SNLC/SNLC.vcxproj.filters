@@ -27,6 +27,9 @@
     <ClCompile Include="SNL_Common\token_list.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="snl_common\exceptions\type_error.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SNL_Lexer\lexer.h">
@@ -36,6 +39,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SNL_Common\token_list.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="snl_common\exceptions\type_error.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
