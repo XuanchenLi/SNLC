@@ -18,5 +18,25 @@
     <ClCompile Include="SNLC.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SNL_Lexer\lexer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SNL_Common\token.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SNL_Common\token_list.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SNL_Lexer\lexer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SNL_Common\token.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SNL_Common\token_list.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

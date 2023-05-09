@@ -140,6 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SNLC.cpp" />
+    <ClCompile Include="SNL_Common\token.cpp" />
+    <ClCompile Include="SNL_Common\token_list.cpp" />
+    <ClCompile Include="SNL_Lexer\lexer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SNL_Common\token.h" />
+    <ClInclude Include="SNL_Common\token_list.h" />
+    <ClInclude Include="SNL_Lexer\lexer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
