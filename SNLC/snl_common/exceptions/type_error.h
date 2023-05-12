@@ -6,7 +6,7 @@
 class TypeError :public std::exception
 {
 public:
-	virtual ~TypeError() throw(){}
+	virtual ~TypeError() noexcept{}
 	virtual const char* what();
 	TypeError(const int line, 
 			  const int col,

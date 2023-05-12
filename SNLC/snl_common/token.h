@@ -2,45 +2,45 @@
 #include <string>
 
 #define TYPE_TABLE()\
-DEF_TYPE(Identifier) \
-DEF_TYPE(Int) \
-DEF_TYPE(Program) \
-DEF_TYPE(Type) \
-DEF_TYPE(Array) \
-DEF_TYPE(Integer) \
-DEF_TYPE(Char) \
-DEF_TYPE(Record) \
-DEF_TYPE(Of) \
-DEF_TYPE(Var) \
-DEF_TYPE(Procedure) \
-DEF_TYPE(Begin) \
-DEF_TYPE(End) \
-DEF_TYPE(If) \
-DEF_TYPE(Then) \
-DEF_TYPE(Else) \
-DEF_TYPE(Fi) \
-DEF_TYPE(While) \
-DEF_TYPE(Do) \
-DEF_TYPE(EndWhile) \
-DEF_TYPE(Read) \
-DEF_TYPE(Write) \
-DEF_TYPE(Return) \
-DEF_TYPE(Add) \
-DEF_TYPE(Minus) \
-DEF_TYPE(Multiply) \
-DEF_TYPE(Divide) \
-DEF_TYPE(Equal) \
-DEF_TYPE(Assign) \
-DEF_TYPE(Comma) \
-DEF_TYPE(Semicolon) \
-DEF_TYPE(LessThan) \
-DEF_TYPE(BracketOpen) \
-DEF_TYPE(BrackerClose) \
-DEF_TYPE(SquareBracketOpen) \
-DEF_TYPE(SquareBracketClose) \
-DEF_TYPE(Dot) \
-DEF_TYPE(DotDot) \
-DEF_TYPE(Eof)
+DEF_TYPE(IDENTIFIER) \
+DEF_TYPE(INT) \
+DEF_TYPE(PROGRAM) \
+DEF_TYPE(TYPE) \
+DEF_TYPE(ARRAY) \
+DEF_TYPE(INTEGER) \
+DEF_TYPE(CHAR) \
+DEF_TYPE(RECORD) \
+DEF_TYPE(OF) \
+DEF_TYPE(VAR) \
+DEF_TYPE(PROCEDURE) \
+DEF_TYPE(BEGIN) \
+DEF_TYPE(END) \
+DEF_TYPE(IF) \
+DEF_TYPE(THEN) \
+DEF_TYPE(ELSE) \
+DEF_TYPE(FI) \
+DEF_TYPE(WHILE) \
+DEF_TYPE(DO) \
+DEF_TYPE(END_WHILE) \
+DEF_TYPE(READ) \
+DEF_TYPE(WRITE) \
+DEF_TYPE(RETURN) \
+DEF_TYPE(ADD) \
+DEF_TYPE(MINUS) \
+DEF_TYPE(MULTIPLY) \
+DEF_TYPE(DIVIDE) \
+DEF_TYPE(EQUAL) \
+DEF_TYPE(ASSIGN) \
+DEF_TYPE(COMMA) \
+DEF_TYPE(SEMICOLON) \
+DEF_TYPE(LESS_THAN) \
+DEF_TYPE(BRACKET_OPEN) \
+DEF_TYPE(BRACKET_CLOSE) \
+DEF_TYPE(SQUARE_BRACKET_OPEN) \
+DEF_TYPE(SQUARE_BRACKET_CLOSE) \
+DEF_TYPE(DOT) \
+DEF_TYPE(DOT_DOT) \
+DEF_TYPE(EOF_)
 
 
 enum TokenType
@@ -61,3 +61,4 @@ typedef struct Token
 
 
 const char* TypeName(TokenType);
+TokenType getTokenType(std::string& str);
