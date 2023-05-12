@@ -40,10 +40,11 @@ DEF_TYPE(SQUARE_BRACKET_OPEN) \
 DEF_TYPE(SQUARE_BRACKET_CLOSE) \
 DEF_TYPE(DOT) \
 DEF_TYPE(DOT_DOT) \
-DEF_TYPE(EOF_)
+DEF_TYPE(EOF_) \
+DEF_TYPE(NOT_ID)
 
 
-enum TokenType
+enum class TokenType
 {
 #define DEF_TYPE(v) v,
     TYPE_TABLE()
@@ -53,6 +54,7 @@ enum TokenType
 
 typedef struct Token
 {
+    Token(int ln, int cn, std::string se, TokenType t):lineNum(ln), colNum(cn), sem(se), type(t){}
     int lineNum;
     int colNum;
     std::string sem;
@@ -61,4 +63,4 @@ typedef struct Token
 
 
 const char* TypeName(TokenType);
-TokenType getTokenType(std::string& str);
+TokenType getID(std::string& str);

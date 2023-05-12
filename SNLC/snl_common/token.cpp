@@ -14,7 +14,7 @@ const char* TypeName(TokenType c)
     }
 }
 
-TokenType getTokenType(const std::string& str)
+TokenType getID(const std::string& str)
 {
     if (str == "program")   return TokenType::PROGRAM;
     if (str == "type")   return TokenType::TYPE;
@@ -52,5 +52,5 @@ TokenType getTokenType(const std::string& str)
     if (str == ")")   return TokenType::BRACKET_CLOSE;
     if (str == ".")   return TokenType::DOT;
     if (str == "..")   return TokenType::DOT_DOT;
-    return TokenType::IDENTIFIER;
+    return TokenType::NOT_ID;
 }

@@ -4,7 +4,7 @@
 #include <vector>
 
 
-enum LexState
+enum class LexState
 {
 	START,
 	IN_ID,
@@ -19,5 +19,5 @@ enum LexState
 class Lexer
 {
 public:
-	std::vector<Token> genTokens(FileReader& fScanner);
+	TokenList genTokens(FileReader& fScanner);
 };
