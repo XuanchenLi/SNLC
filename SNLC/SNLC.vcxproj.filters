@@ -39,6 +39,9 @@
     <ClCompile Include="snl_grammar\parser.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="snl_grammar\predict.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SNL_Lexer\lexer.h">
@@ -60,6 +63,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="snl_grammar\parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="snl_grammar\predict.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

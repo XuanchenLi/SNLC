@@ -79,6 +79,5 @@ typedef struct ASTNodeBase
 {
     int lineNum;
     NodeKind nodeKind;
-
-
 }ASTNodeBase;
+
