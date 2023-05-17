@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "token.h"
 
 // AST节点类型枚举
 #define NODETYPE_TABLE()\
@@ -29,7 +30,8 @@ DEF_TYPE(ARRAY_K) \
 DEF_TYPE(CHAR_K) \
 DEF_TYPE(INTEGER_K) \
 DEF_TYPE(RECORD_K) \
-DEF_TYPE(ID_K)
+DEF_TYPE(ID_K) \
+DEF_TYPE(PROC_K)
 
 enum class ASTDecKind
 {
@@ -84,6 +86,8 @@ DEF_TYPE(PLUS) \
 DEF_TYPE(MINUS) \
 DEF_TYPE(TIMES) \
 DEF_TYPE(OVER) \
+DEF_TYPE(BRACKET_OPEN) \
+DEF_TYPE(BRACKET_CLOSE) \
 DEF_TYPE(STACK_END)
 
 
@@ -94,6 +98,7 @@ enum class ASTOpType
 #undef DEF_TYPE
 };
 
+const char* ExpOpName(ASTOpType);
 
 int GetOpPriority(ASTOpType);
 
@@ -220,6 +225,10 @@ ASTNodeBase* GetASTLabelNode(ASTNodeKind);
 ASTDecNode* GetASTDecNode(ASTDecKind);
 ASTStmtNode* GetASTStmtNode(ASTStmtKind);
 ASTExpNode* GetASTExpNode(ASTEXPKind);
+ASTExpNode* GetASTExpOpNode(ASTOpType);
 ASTDecNode* GetASTDecNode();
 ASTStmtNode* GetASTStmtNode();
 ASTExpNode* GetASTExpNode();
+ASTExpNode* GetASTExpConstNode();
+ASTExpNode* GetASTExpVarNode();
+ASTOpType TokenType2OpType(TokenType);

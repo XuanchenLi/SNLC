@@ -1,7 +1,7 @@
 #include "token.h"
 
 
-const char* TypeName(TokenType c)
+const char* TokenTypeName(TokenType c)
 {
     switch (c)
     {

@@ -53,6 +53,19 @@ const char* ExpKindName(ASTEXPKind c)
     }
 }
 
+const char* ExpOpName(ASTOpType c)
+{
+    switch (c)
+    {
+
+#define DEF_TYPE(v) case ASTOpType::v : return #v;
+        OPTYPE_TABLE()
+#undef DEF_TYPE
+    default:
+        return "UNDEFINED";
+    }
+}
+
 
 int GetOpPriprity(ASTOpType op)
 {
@@ -131,4 +144,55 @@ ASTExpNode* GetASTExpNode()
     ASTExpNode* res = new ASTExpNode();
     res->nodeBase.nodeKind = ASTNodeKind::EXP_K;
     return res;
+}
+ASTExpNode* GetASTExpOpNode(ASTOpType o)
+{
+    ASTExpNode* res = new ASTExpNode();
+    res->nodeBase.nodeKind = ASTNodeKind::EXP_K;
+    res->expKind = ASTEXPKind::OP_K;
+    res->expAttr.op = o;
+    return res;
+}
+ASTExpNode* GetASTExpConstNode()
+{
+    ASTExpNode* res = new ASTExpNode();
+    res->nodeBase.nodeKind = ASTNodeKind::EXP_K;
+    res->expKind = ASTEXPKind::CONST_K;
+    return res;
+
+}
+ASTExpNode* GetASTExpVarNode()
+{
+    ASTExpNode* res = new ASTExpNode();
+    res->nodeBase.nodeKind = ASTNodeKind::EXP_K;
+    res->expKind = ASTEXPKind::ID_K;
+    return res;
+
+}
+ASTOpType TokenType2OpType(TokenType t)
+{
+    switch (t)
+    {
+    case TokenType::LESS_THAN:
+        return ASTOpType::LT;
+    case TokenType::EQUAL:
+        return ASTOpType::EQ;
+    case TokenType::ADD:
+        return ASTOpType::PLUS;
+    case TokenType::MINUS:
+        return ASTOpType::MINUS;
+    case TokenType::MULTIPLY:
+        return ASTOpType::TIMES;
+    case TokenType::DIVIDE:
+        return ASTOpType::OVER;
+    case TokenType::BRACKET_OPEN:
+        return ASTOpType::BRACKET_OPEN;
+    case TokenType::BRACKET_CLOSE:
+        return ASTOpType::BRACKET_CLOSE;
+    default:
+        throw std::exception(std::string("ERROR: Bad cast from: " 
+                                         + std::string(TokenTypeName(t))
+                                         + "to exp op type").c_str());
+        break;
+    }
 }

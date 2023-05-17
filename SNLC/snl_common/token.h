@@ -64,5 +64,5 @@ typedef struct Token
 }Token;
 
 
-const char* TypeName(TokenType);
+const char* TokenTypeName(TokenType);
 TokenType getID(std::string& str);
