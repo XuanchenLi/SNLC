@@ -98,6 +98,9 @@ enum class NonTerminalType
 const char* NonTerminalTypeName(NonTerminalType);
 
 
+typedef std::pair<NonTerminalType, TokenType> PredictTableKey;
+
+
 typedef struct SymbolStackItem
 {
     SymbolType symbolType;
@@ -105,7 +108,10 @@ typedef struct SymbolStackItem
     {
         NonTerminalType nonTerminalType;    // 非终止符有效
         TokenType tokenType;    // 终止符有效
-    }SymbolName;
+    }symbolName;
 }SymbolStackItem;
+
+SymbolStackItem GetTerminal(TokenType);
+SymbolStackItem GetNonTerminal(NonTerminalType);
 
 

@@ -27,3 +27,19 @@ const char* SymbolTypeName(SymbolType c)
         return "UNDEFINED";
     }
 }
+
+
+SymbolStackItem GetTerminal(TokenType t)
+{
+    SymbolStackItem res;
+    res.symbolType = SymbolType::TERMINAL;
+    res.symbolName.tokenType = t;
+    return res;
+}
+SymbolStackItem GetNonTerminal(NonTerminalType t)
+{
+    SymbolStackItem res;
+    res.symbolType = SymbolType::NON_TERMINAL;
+    res.symbolName.nonTerminalType= t;
+    return res;
+}

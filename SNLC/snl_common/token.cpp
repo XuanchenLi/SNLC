@@ -44,6 +44,7 @@ TokenType getID(const std::string& str)
     if (str == "=")   return TokenType::EQUAL;
     if (str == ":=")   return TokenType::ASSIGN;
     if (str == ",")   return TokenType::COMMA;
+    if (str == ":")   return TokenType::COLON;
     if (str == ";")   return TokenType::SEMICOLON;
     if (str == "<")   return TokenType::LESS_THAN;
     if (str == "[")   return TokenType::SQUARE_BRACKET_OPEN;

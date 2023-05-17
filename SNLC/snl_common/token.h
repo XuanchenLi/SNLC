@@ -33,6 +33,7 @@ DEF_TYPE(EQUAL) \
 DEF_TYPE(ASSIGN) \
 DEF_TYPE(COMMA) \
 DEF_TYPE(SEMICOLON) \
+DEF_TYPE(COLON) \
 DEF_TYPE(LESS_THAN) \
 DEF_TYPE(BRACKET_OPEN) \
 DEF_TYPE(BRACKET_CLOSE) \
@@ -54,6 +55,7 @@ enum class TokenType
 
 typedef struct Token
 {
+    Token();
     Token(int ln, int cn, std::string se, TokenType t):lineNum(ln), colNum(cn), sem(se), type(t){}
     int lineNum;
     int colNum;

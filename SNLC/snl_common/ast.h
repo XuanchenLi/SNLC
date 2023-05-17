@@ -83,7 +83,8 @@ DEF_TYPE(EQ) \
 DEF_TYPE(PLUS) \
 DEF_TYPE(MINUS) \
 DEF_TYPE(TIMES) \
-DEF_TYPE(OVER)
+DEF_TYPE(OVER) \
+DEF_TYPE(STACK_END)
 
 
 enum class ASTOpType
@@ -92,6 +93,9 @@ enum class ASTOpType
     OPTYPE_TABLE()
 #undef DEF_TYPE
 };
+
+
+int GetOpPriority(ASTOpType);
 
 
 // 语法树表达式节点的变量类型枚举
@@ -171,6 +175,8 @@ typedef struct ASTNodeBase
     ASTNodeKind nodeKind;
     ASTNodeBase* sibling;
     ASTNodeBase* child[MAXCHILDREN];
+    std::vector<std::string> names;     //标识符名字
+    std::vector<unsigned long int> tablePtrs;   //各个标识符符号表入口
 
 }ASTNodeBase;
 
@@ -181,8 +187,6 @@ typedef struct ASTDecNode
 {
     ASTNodeBase nodeBase;
     ASTDecKind decKind;     //具体声明类型
-    std::vector<std::string> names;     //标识符名字
-    std::vector<unsigned long int> tablePtrs;   //各个标识符符号表入口
     std::string typeName;   //类型为类型标识符表示时有效
     union
     {
@@ -197,6 +201,7 @@ typedef struct ASTDecNode
 //  nodeKind应为STMT_K
 typedef struct ASTStmtNode
 {
+    ASTNodeBase nodeBase;
     ASTStmtKind stmtKind;       //具体语句类型
 }ASTStmtNode;
 
@@ -205,8 +210,16 @@ typedef struct ASTStmtNode
 //  nodeKind应为EXP_K
 typedef struct ASTExpNode
 {
+    ASTNodeBase nodeBase;
     ASTEXPKind expKind;     //具体表达式类型
-    std::vector<std::string> names;     //标识符名字
-    std::vector<unsigned long int> tablePtrs;   //各个标识符符号表入口
     ASTExpAttr expAttr;
 }ASTExpNode;
+
+
+ASTNodeBase* GetASTLabelNode(ASTNodeKind);
+ASTDecNode* GetASTDecNode(ASTDecKind);
+ASTStmtNode* GetASTStmtNode(ASTStmtKind);
+ASTExpNode* GetASTExpNode(ASTEXPKind);
+ASTDecNode* GetASTDecNode();
+ASTStmtNode* GetASTStmtNode();
+ASTExpNode* GetASTExpNode();
