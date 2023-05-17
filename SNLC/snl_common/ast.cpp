@@ -1,11 +1,11 @@
 #include "ast.h"
 
-const char* ASTNodeKindName(NodeKind c)
+const char* ASTNodeKindName(ASTNodeKind c)
 {
     switch (c)
     {
 
-#define DEF_TYPE(v) case NodeKind::v : return #v;
+#define DEF_TYPE(v) case ASTNodeKind::v : return #v;
         NODETYPE_TABLE()
 #undef DEF_TYPE
     default:
@@ -14,12 +14,12 @@ const char* ASTNodeKindName(NodeKind c)
 }
 
 
-const char* DecKindName(DecKind c)
+const char* DecKindName(ASTDecKind c)
 {
     switch (c)
     {
 
-#define DEF_TYPE(v) case DecKind::v : return #v;
+#define DEF_TYPE(v) case ASTDecKind::v : return #v;
         DECTYPE_TABLE()
 #undef DEF_TYPE
     default:
@@ -27,12 +27,12 @@ const char* DecKindName(DecKind c)
     }
 }
 
-const char* StmtKindName(StmtKind c)
+const char* StmtKindName(ASTStmtKind c)
 {
     switch (c)
     {
 
-#define DEF_TYPE(v) case StmtKind::v : return #v;
+#define DEF_TYPE(v) case ASTStmtKind::v : return #v;
         STMTTYPE_TABLE()
 #undef DEF_TYPE
     default:
@@ -40,12 +40,12 @@ const char* StmtKindName(StmtKind c)
     }
 }
 
-const char* ExpKindName(EXPKind c)
+const char* ExpKindName(ASTEXPKind c)
 {
     switch (c)
     {
 
-#define DEF_TYPE(v) case EXPKind::v : return #v;
+#define DEF_TYPE(v) case ASTEXPKind::v : return #v;
         EXPTYPE_TABLE()
 #undef DEF_TYPE
     default:
