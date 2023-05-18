@@ -1,5 +1,6 @@
 #pragma once
 #include "predict.h"
+#include "../snl_common/token_list.h"
 #include "../snl_common/ast.h"
 #include <map>
 #include <unordered_map>
@@ -87,4 +88,5 @@ private:
 	int expFlag;
 public:
 	Parser();
+	ASTNodeBase* parse(TokenList&);
 };

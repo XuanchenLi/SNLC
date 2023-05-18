@@ -16,7 +16,7 @@ public:
 	inline void appendToken(const Token& t) { tokens.emplace_back(t); }
 	inline bool hasNext() { return curIdx < tokens.size() - 1; }
 	inline void moveNext() { curIdx++; }
-	Token getCurToken() throw(std::out_of_range);
-	Token getNextToken() throw(std::out_of_range);
-	Token testAndGetCurToken(TokenType targetType) throw(std::out_of_range, TypeError);
+	Token getCurToken();
+	Token getNextToken();
+	Token testAndGetCurToken(TokenType targetType);
 };

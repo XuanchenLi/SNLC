@@ -99,6 +99,16 @@ TokenList Lexer::genTokens(FileReader& fScanner)
 					//循环该状态，取下一个字符
 					sem += ch;
 					notEnd = fScanner.getNextChar(ch);
+					if (!notEnd)
+					{
+						TokenType tp = getID(sem);
+						res.appendToken(
+							Token(
+								tokenLine, tokenCol, sem,
+								tp == TokenType::NOT_ID ? TokenType::IDENTIFIER : tp
+							)
+						);
+					}
 					scanCol++;
 					continue;
 				}
@@ -124,6 +134,14 @@ TokenList Lexer::genTokens(FileReader& fScanner)
 					//循环该状态，取下一个字符
 					sem += ch;
 					notEnd = fScanner.getNextChar(ch);
+					if (!notEnd)
+					{
+						res.appendToken(
+							Token(
+								tokenLine, tokenCol, sem, TokenType::INT
+							)
+						);
+					}
 					scanCol++;
 					continue;
 				}
@@ -146,6 +164,10 @@ TokenList Lexer::genTokens(FileReader& fScanner)
 				{
 					// 循环该状态，取下一个字符
 					notEnd = fScanner.getNextChar(ch);
+					if (!notEnd)
+					{
+						std::cout << "ERROR: Unclosed comment region.\n";
+					}
 					scanCol++;
 					continue;
 				}
@@ -212,6 +234,24 @@ TokenList Lexer::genTokens(FileReader& fScanner)
 			}
 		}
 	}
+	
+	if (sem == ".")
+	{
+		res.appendToken(
+			Token(
+				tokenLine, tokenCol, sem, TokenType::DOT
+			)
+		);
+	}
+	else if (sem == ":")
+	{
+		res.appendToken(
+			Token(
+				tokenLine, tokenCol, sem, TokenType::COLON
+			)
+		);
+	}
+	
 	res.appendToken(
 		Token(tokenLine, tokenCol, "", TokenType::EOF_)
 	);

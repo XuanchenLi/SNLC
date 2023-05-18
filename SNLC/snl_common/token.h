@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 
 #define TYPE_TABLE()\
 DEF_TYPE(IDENTIFIER) \
@@ -55,14 +56,16 @@ enum class TokenType
 
 typedef struct Token
 {
-    Token();
+    Token() {};
     Token(int ln, int cn, std::string se, TokenType t):lineNum(ln), colNum(cn), sem(se), type(t){}
     int lineNum;
     int colNum;
     std::string sem;
     TokenType type;
+public:
+    friend std::ostream& operator<<(std::ostream&, Token&&);
 }Token;
 
 
 const char* TokenTypeName(TokenType);
-TokenType getID(std::string& str);
+TokenType getID(const std::string& str);

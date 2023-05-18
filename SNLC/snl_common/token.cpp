@@ -55,3 +55,10 @@ TokenType getID(const std::string& str)
     if (str == "..")   return TokenType::DOT_DOT;
     return TokenType::NOT_ID;
 }
+
+std::ostream& operator<<(std::ostream& os, Token&& t)
+{
+    os << "Token type: " + std::string(TokenTypeName(t.type)) << " Token sem: " << t.sem
+        << " Line: " + std::to_string(t.lineNum) << " Column: " + std::to_string(t.colNum);
+    return os;
+}

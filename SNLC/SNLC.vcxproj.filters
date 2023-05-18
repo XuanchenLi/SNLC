@@ -71,5 +71,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="supplement\snl.bnf" />
+    <None Include="tests\test1.snl" />
   </ItemGroup>
 </Project>

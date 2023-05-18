@@ -67,7 +67,7 @@ const char* ExpOpName(ASTOpType c)
 }
 
 
-int GetOpPriprity(ASTOpType op)
+int GetOpPriority(ASTOpType op)
 {
     switch (op)
     {

@@ -12,6 +12,56 @@ Parser::Parser()
 	currentP = root;
 }
 
+ASTNodeBase* Parser::parse(TokenList& tokenList)
+{
+	if (!tokenList.hasNext())
+	{
+		return root;
+	}
+	Token token = tokenList.getCurToken();
+	currentP->lineNum = token.lineNum;
+	while (!symbolStack.empty())
+	{
+		if (symbolStack.top().symbolType == SymbolType::TERMINAL)
+		{
+			if (token.type == symbolStack.top().symbolName.tokenType)
+			{
+				symbolStack.pop();
+				if (!tokenList.hasNext())
+				{
+					throw std::exception(
+						"ERROR: Unexcept end of tokens."
+					);
+				}
+				tokenList.moveNext();
+				token = tokenList.getCurToken();
+				currentP->lineNum = token.lineNum;
+			}
+			else
+			{
+				throw std::exception(
+					("ERROR: Except to get: " + std::string(TokenTypeName(symbolStack.top().symbolName.tokenType))
+					 + " but got: " + TokenTypeName(token.type) + " at line " + std::to_string(token.lineNum)
+					 + " column " + std::to_string(token.colNum)).c_str()
+				);
+			}
+		}
+		else
+		{
+			NonTerminalType line = symbolStack.top().symbolName.nonTerminalType;
+			TokenType col = token.type;
+			std::function<void()> preFun = predictTable[PredictTableKey(line, col)];
+			symbolStack.pop();
+			preFun();
+		}
+
+	}
+	if (token.type != TokenType::EOF_) {
+		throw std::exception(("ERROR: Unexcept end of file at line " + std::to_string(token.lineNum)).c_str());
+	}
+	return root;
+}
+
 void Parser::initPredictTable()
 {
 	predictTable.clear();
