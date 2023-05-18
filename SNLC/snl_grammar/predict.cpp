@@ -14,6 +14,11 @@ const char* NonTerminalTypeName(NonTerminalType c)
     }
 }
 
+std::pair<PredictTableKey, std::function<void()>> GetPredictItem(PredictTableKey key, std::function<void()> f)
+{
+    return std::pair<PredictTableKey, std::function<void()>>(key, f);
+}
+
 
 const char* SymbolTypeName(SymbolType c)
 {

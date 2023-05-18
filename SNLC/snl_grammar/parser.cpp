@@ -14,7 +14,1155 @@ Parser::Parser()
 
 void Parser::initPredictTable()
 {
+	predictTable.clear();
+	insertPredictTable(NonTerminalType::PROGRAM,
+					   { TokenType::PROGRAM },
+					   std::function<void()>([this]
+											 {
+												 pushSymbolStack({ GetNonTerminal(NonTerminalType::PROGRAM_BODY),
+																 GetNonTerminal(NonTerminalType::DECLARE_PART),
+															 GetNonTerminal(NonTerminalType::PROGRAM_HEAD)
+																 });
+											 }
+											 )
+	);
+	insertPredictTable(
+		NonTerminalType::PROGRAM_HEAD,
+		{ TokenType::PROGRAM },
+		std::function<void()>(
+			[this]
+			{
+				this->process2();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROGRAM_NAME,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				this->process3();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::DECLARE_PART,
+		{ TokenType::TYPE, TokenType::VAR, TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({ 
+					GetNonTerminal(NonTerminalType::PROC_DECPART),
+					GetNonTerminal(NonTerminalType::VAR_DEC),
+					GetNonTerminal(NonTerminalType::TYPE_DEC)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEC,
+		{ TokenType::VAR, TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[]
+			{}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEC,
+		{ TokenType::TYPE},
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::TYPE_DECLATRATION)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DECLATRATION,
+		{ TokenType::TYPE },
+		std::function<void()>(
+			[this]
+			{
+				this->process7();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEC_LIST,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				this->process8();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEC_MORE,
+		{ TokenType::VAR, TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				this->process9();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEC_MORE,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::TYPE_DEC_LIST)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_ID,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				storeTokenSem(TokenType::IDENTIFIER);
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEF,
+		{ TokenType::INTEGER, TokenType::CHAR},
+		std::function<void()>(
+			[this]
+			{
+				this->process12();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEF,
+		{ TokenType::ARRAY,  TokenType::RECORD },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::STRUCT_TYPE)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TYPE_DEF,
+		{ TokenType::IDENTIFIER},
+		std::function<void()>(
+			[this]
+			{
+				this->process14();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::BASE_TYPE,
+		{ TokenType::INTEGER },
+		std::function<void()>(
+			[this]
+			{
+				this->process15();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::BASE_TYPE,
+		{ TokenType::CHAR },
+		std::function<void()>(
+			[this]
+			{
+				this->process16();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STRUCT_TYPE,
+		{ TokenType::ARRAY },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::ARRAY_TYPE)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STRUCT_TYPE,
+		{ TokenType::RECORD },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::REC_TYPE)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ARRAY_TYPE,
+		{ TokenType::ARRAY },
+		std::function<void()>(
+			[this]
+			{
+				this->process19();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::LOW,
+		{ TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				this->process20();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TOP,
+		{ TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				this->process21();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::REC_TYPE,
+		{ TokenType::RECORD },
+		std::function<void()>(
+			[this]
+			{
+				this->process22();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_DEC_LIST,
+		{ TokenType::INTEGER,  TokenType::CHAR },
+		std::function<void()>(
+			[this]
+			{
+				this->process23();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_DEC_LIST,
+		{ TokenType::ARRAY },
+		std::function<void()>(
+			[this]
+			{
+				this->process24();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_DEC_MORE,
+		{ TokenType::END },
+		std::function<void()>(
+			[this]
+			{
+				this->process25();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_DEC_MORE,
+		{ TokenType::INTEGER,  TokenType::CHAR, TokenType::ARRAY },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::FIELD_DEC_LIST)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ID_LIST,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				this->process27();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ID_MORE,
+		{ TokenType::SEMICOLON },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ID_MORE,
+		{ TokenType::COMMA },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::ID_LIST),
+					GetTerminal(TokenType::COMMA)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DEC,
+		{ TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DEC,
+		{ TokenType::VAR },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::VAR_DECLARATION)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DECLARATION,
+		{ TokenType::VAR },
+		std::function<void()>(
+			[this]
+			{
+				this->process32();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DEC_LIST,
+		{ TokenType::INTEGER, TokenType::CHAR, TokenType::ARRAY, TokenType::RECORD, TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				this->process33();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DEC_MORE,
+		{ TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				ASTStack.pop();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_DEC_MORE,
+		{ TokenType::INTEGER, TokenType::CHAR, TokenType::ARRAY, TokenType::RECORD, TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::VAR_DEC_LIST)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_ID_LIST,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				this->process36();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_ID_MORE,
+		{ TokenType::SEMICOLON },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VAR_ID_MORE,
+		{ TokenType::COMMA},
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::VAR_ID_LIST),
+					GetTerminal(TokenType::COMMA)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DECPART,
+		{ TokenType::BEGIN },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DECPART,
+		{ TokenType::PROCEDURE },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PROC_DEC)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DEC,
+		{ TokenType::PROCEDURE },
+		std::function<void()>(
+			[this]
+			{
+				process41();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DEC_MORE,
+		{ TokenType::BEGIN },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DEC_MORE,
+		{ TokenType::PROCEDURE },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PROC_DEC)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_NAME,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				storeTokenSem(TokenType::IDENTIFIER);
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM_LIST,
+		{ TokenType::BRACKET_CLOSE },
+		std::function<void()>(
+			[this]
+			{
+				ASTStack.pop();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM_LIST,
+		{ TokenType::INTEGER, TokenType::CHAR, TokenType::ARRAY, TokenType::RECORD, TokenType::IDENTIFIER, TokenType::VAR },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PARAM_LIST)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM_DEC_LIST,
+		{ TokenType::INTEGER, TokenType::CHAR, TokenType::ARRAY, TokenType::RECORD, TokenType::IDENTIFIER, TokenType::VAR },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PARAM_MORE),
+					GetNonTerminal(NonTerminalType::PARAM)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM_MORE,
+		{ TokenType::BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process48();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM_MORE,
+		{ TokenType::SEMICOLON },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PARAM_DEC_LIST),
+					GetTerminal(TokenType::SEMICOLON)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM,
+		{ TokenType::INTEGER, TokenType::CHAR, TokenType::ARRAY, TokenType::RECORD, TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process50();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PARAM,
+		{ TokenType::VAR },
+		std::function<void()>(
+			[this]
+			{
+				process51();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FORM_LIST,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process52();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FID_MORE,
+		{ TokenType::SEMICOLON, TokenType::BRACKET_CLOSE },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FID_MORE,
+		{ TokenType::COMMA },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::FORM_LIST),
+					GetTerminal(TokenType::COMMA)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_DEC_PART,
+		{ TokenType::TYPE, TokenType::VAR, TokenType::PROCEDURE, TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::DECLARE_PART)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROC_BODY,
+		{ TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::PROGRAM_BODY)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::PROGRAM_BODY,
+		{ TokenType::BEGIN },
+		std::function<void()>(
+			[this]
+			{
+				process57();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM_LIST,
+		{ TokenType::IDENTIFIER, TokenType::IF, TokenType::WHILE, TokenType::RETURN, TokenType::READ, TokenType::WRITE },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::STM_MORE),
+					GetNonTerminal(NonTerminalType::STM)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM_MORE,
+		{ TokenType::ELSE, TokenType::FI, TokenType::END, TokenType::END_WHILE },
+		std::function<void()>(
+			[this]
+			{
+				ASTStack.pop();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM_MORE,
+		{ TokenType::SEMICOLON },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::STM_LIST),
+					GetTerminal(TokenType::SEMICOLON)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::IF },
+		std::function<void()>(
+			[this]
+			{
+				process61();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::WHILE },
+		std::function<void()>(
+			[this]
+			{
+				process62();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::READ },
+		std::function<void()>(
+			[this]
+			{
+				process63();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::WRITE },
+		std::function<void()>(
+			[this]
+			{
+				process64();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::RETURN },
+		std::function<void()>(
+			[this]
+			{
+				process65();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::STM,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process66();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ASS_CALL,
+		{ TokenType::ASSIGN },
+		std::function<void()>(
+			[this]
+			{
+				process67();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ASS_CALL,
+		{ TokenType::BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process68();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ASSIGNMENT_REST,
+		{ TokenType::ASSIGN, TokenType::DOT, TokenType::SQUARE_BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process69();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::CONDITIONAL_STM,
+		{ TokenType::IF },
+		std::function<void()>(
+			[this]
+			{
+				process70();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::LOOP_STM,
+		{ TokenType::WHILE },
+		std::function<void()>(
+			[this]
+			{
+				process71();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::INPUT_STM,
+		{ TokenType::READ },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::BRACKET_CLOSE),
+					GetNonTerminal(NonTerminalType::IN_VAR),
+					GetTerminal(TokenType::BRACKET_OPEN),
+					GetTerminal(TokenType::READ)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::IN_VAR,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				storeTokenSem(TokenType::IDENTIFIER);
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OUTPUT_STM,
+		{ TokenType::WRITE },
+		std::function<void()>(
+			[this]
+			{
+				process74();
+			}
+				)
+	);
 
+	insertPredictTable(
+		NonTerminalType::RETURN_STM,
+		{ TokenType::RETURN },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::RETURN)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::CALL_STM_REST,
+		{ TokenType::BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process76();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ACT_PARAM_LIST,
+		{ TokenType::BRACKET_CLOSE },
+		std::function<void()>(
+			[this]
+			{
+				ASTStack.pop();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ACT_PARAM_LIST,
+		{ TokenType::BRACKET_OPEN, TokenType::IDENTIFIER, TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				process78();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ACT_PARAM_MORE,
+		{ TokenType::BRACKET_CLOSE },
+		std::function<void()>(
+			[]
+			{
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ACT_PARAM_MORE,
+		{ TokenType::COMMA },
+		std::function<void()>(
+			[this]
+			{
+				process80();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::REL_EXP,
+		{ TokenType::BRACKET_OPEN, TokenType::IDENTIFIER, TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				process81();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OTHER_REL_E,
+		{ TokenType::EQUAL, TokenType::LESS_THAN },
+		std::function<void()>(
+			[this]
+			{
+				process82();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::EXP,
+		{ TokenType::BRACKET_OPEN, TokenType::IDENTIFIER, TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::OTHER_TERM),
+					GetNonTerminal(NonTerminalType::TERM)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OTHER_TERM,
+		{ TokenType::EQUAL, TokenType::LESS_THAN, TokenType::SQUARE_BRACKET_CLOSE,
+		  TokenType::THEN, TokenType::ELSE, TokenType::FI,
+		TokenType::DO, TokenType::END_WHILE, TokenType::BRACKET_CLOSE,
+		TokenType::END, TokenType::SEMICOLON, TokenType::COMMA
+		},
+		std::function<void()>(
+			[this]
+			{
+				process84();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OTHER_TERM,
+		{ TokenType::ADD, TokenType::MINUS },
+		std::function<void()>(
+			[this]
+			{
+				process85();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::TERM,
+		{ TokenType::BRACKET_OPEN, TokenType::IDENTIFIER, TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::OTHER_FACTOR),
+					GetNonTerminal(NonTerminalType::FACTOR)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OTHER_FACTOR,
+		{ TokenType::EQUAL, TokenType::LESS_THAN, TokenType::SQUARE_BRACKET_CLOSE,
+		  TokenType::THEN, TokenType::ELSE, TokenType::FI,
+		TokenType::DO, TokenType::END_WHILE, TokenType::BRACKET_CLOSE,
+		TokenType::END, TokenType::SEMICOLON, TokenType::COMMA,
+		TokenType::ADD, TokenType::MINUS
+		},
+		std::function<void()>(
+			[]
+			{
+
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::OTHER_FACTOR,
+		{ TokenType::MULTIPLY, TokenType::DIVIDE },
+		std::function<void()>(
+			[this]
+			{
+				process88();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FACTOR,
+		{ TokenType::BRACKET_OPEN},
+		std::function<void()>(
+			[this]
+			{
+				process89();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FACTOR,
+		{ TokenType::INT },
+		std::function<void()>(
+			[this]
+			{
+				process90();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FACTOR,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetNonTerminal(NonTerminalType::VARIABLE)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VARIABLE,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process92();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VARI_MORE,
+		{ TokenType::EQUAL, TokenType::LESS_THAN, TokenType::SQUARE_BRACKET_CLOSE,
+		  TokenType::THEN, TokenType::ELSE, TokenType::FI,
+		TokenType::DO, TokenType::END_WHILE, TokenType::BRACKET_CLOSE,
+		TokenType::END, TokenType::SEMICOLON, TokenType::COMMA,
+		TokenType::ADD, TokenType::MINUS, TokenType::MULTIPLY, TokenType::DIVIDE, TokenType::ASSIGN
+		},
+		std::function<void()>(
+			[this]
+			{
+				process93();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VARI_MORE,
+		{ TokenType::SQUARE_BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process94();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::VARI_MORE,
+		{ TokenType::DOT },
+		std::function<void()>(
+			[this]
+			{
+				process95();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_VAR,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process96();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_VAR_MORE,
+		{ TokenType::IDENTIFIER },
+		std::function<void()>(
+			[this]
+			{
+				process96();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_VAR_MORE,
+		{ TokenType::EQUAL, TokenType::LESS_THAN, TokenType::SQUARE_BRACKET_CLOSE,
+		  TokenType::THEN, TokenType::ELSE, TokenType::FI,
+		TokenType::DO, TokenType::END_WHILE, TokenType::BRACKET_CLOSE,
+		TokenType::END, TokenType::SEMICOLON, TokenType::COMMA,
+		TokenType::ADD, TokenType::MINUS, TokenType::MULTIPLY, TokenType::DIVIDE, TokenType::ASSIGN
+		},
+		std::function<void()>(
+			[this]
+			{
+				process97();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::FIELD_VAR_MORE,
+		{ TokenType::SQUARE_BRACKET_OPEN },
+		std::function<void()>(
+			[this]
+			{
+				process94();
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::CMP_OP,
+		{ TokenType::LESS_THAN },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::LESS_THAN)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::CMP_OP,
+		{ TokenType::EQUAL },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::EQUAL)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ADD_OP,
+		{ TokenType::ADD },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::ADD)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::ADD_OP,
+		{ TokenType::MINUS },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::MINUS)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::MULTI_OP,
+		{ TokenType::MULTIPLY },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::MULTIPLY)
+								});
+			}
+				)
+	);
+	insertPredictTable(
+		NonTerminalType::MULTI_OP,
+		{ TokenType::DIVIDE },
+		std::function<void()>(
+			[this]
+			{
+				pushSymbolStack({
+					GetTerminal(TokenType::DIVIDE)
+								});
+			}
+				)
+	);
+}
+void Parser::insertPredictTable(NonTerminalType nt, std::vector<TokenType> ts, std::function<void()>f)
+{
+	for (auto t : ts) {
+		predictTable.insert(GetPredictItem(
+			PredictTableKey(nt, t), f
+		));
+	}
 }
 void Parser::initOpStack()
 {

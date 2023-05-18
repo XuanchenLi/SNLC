@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <functional>
 #include "../snl_common/token.h"
 
 
@@ -26,6 +27,7 @@ DEF_TYPE(PROGRAM_NAME) \
 DEF_TYPE(DECLARE_PART) \
 DEF_TYPE(TYPE_DECPART) \
 DEF_TYPE(TYPE_DEC) \
+DEF_TYPE(TYPE_DECLATRATION) \
 DEF_TYPE(TYPE_DEC_LIST) \
 DEF_TYPE(TYPE_DEC_MORE) \
 DEF_TYPE(TYPE_ID) \
@@ -42,6 +44,7 @@ DEF_TYPE(ID_LIST) \
 DEF_TYPE(ID_MORE) \
 DEF_TYPE(VAR_DEC_PART) \
 DEF_TYPE(VAR_DEC) \
+DEF_TYPE(VAR_DECLARATION) \
 DEF_TYPE(VAR_DEC_LIST) \
 DEF_TYPE(VAR_DEC_MORE) \
 DEF_TYPE(VAR_ID_LIST) \
@@ -67,7 +70,7 @@ DEF_TYPE(ASSIGNMENT_REST) \
 DEF_TYPE(CONDITIONAL_STM) \
 DEF_TYPE(LOOP_STM) \
 DEF_TYPE(INPUT_STM) \
-DEF_TYPE(INVAR) \
+DEF_TYPE(IN_VAR) \
 DEF_TYPE(OUTPUT_STM) \
 DEF_TYPE(RETURN_STM) \
 DEF_TYPE(CALL_STM_REST) \
@@ -100,6 +103,7 @@ const char* NonTerminalTypeName(NonTerminalType);
 
 typedef std::pair<NonTerminalType, TokenType> PredictTableKey;
 
+std::pair<PredictTableKey, std::function<void()>> GetPredictItem(PredictTableKey, std::function<void()>);
 
 typedef struct SymbolStackItem
 {

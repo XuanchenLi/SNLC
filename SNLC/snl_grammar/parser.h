@@ -2,6 +2,7 @@
 #include "predict.h"
 #include "../snl_common/ast.h"
 #include <map>
+#include <unordered_map>
 #include <functional>
 #include <stack>
 
@@ -17,6 +18,7 @@ private:
 	std::stack<ASTExpNode*> operatorStack; //²Ù×÷·ûÕ»
 	ASTNodeBase* root;
 	void initPredictTable();
+	void insertPredictTable(NonTerminalType, std::vector<TokenType>, std::function<void()>);
 	void initOpStack();
 	void pushSymbolStack(std::vector<SymbolStackItem>);
 	void storeTokenSem(TokenType);
