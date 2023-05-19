@@ -7,6 +7,6 @@
 
 int main()
 {
-    testParser("./tests/test1.snl");
+    testParser("E:\\SNLC\\SNLC\\tests\\test3.snl");
 }
 
