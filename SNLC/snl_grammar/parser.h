@@ -69,7 +69,7 @@ private:
 	void process81();
 	void process82();
 	void process84();
-	void process85();
+	void process85(); //½Ì²ÄÓÐÎó£¿
 	void process88();
 	void process89();
 	void process90();
@@ -83,10 +83,11 @@ private:
 	Token currentT;
 	ASTDecKind* tempDecKindPtr;
 	ASTDecNode* saveP;
-	bool getExpResault;
-	bool getExpResault2;
+	bool getExpResult;
+	bool getExpResult2;
 	int expFlag;
 public:
 	Parser();
 	ASTNodeBase* parse(TokenList&);
+	void printTree(ASTNodeBase* t, int layer=0);
 };

@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <iostream>
 
 Parser::Parser()
 {
@@ -18,63 +19,81 @@ ASTNodeBase* Parser::parse(TokenList& tokenList)
 	{
 		return root;
 	}
-	Token token = tokenList.getCurToken();
-	currentP->lineNum = token.lineNum;
+	currentT = tokenList.getCurToken();
+	currentP->lineNum = currentT.lineNum;
 	while (!symbolStack.empty())
 	{
 		if (symbolStack.top().symbolType == SymbolType::TERMINAL)
 		{
-			if (token.type == symbolStack.top().symbolName.tokenType)
+			if (currentT.type == symbolStack.top().symbolName.tokenType)
 			{
 				symbolStack.pop();
 				if (!tokenList.hasNext())
 				{
-					throw std::exception(
+					throw std::runtime_error(
 						"ERROR: Unexcept end of tokens."
 					);
 				}
 				tokenList.moveNext();
-				token = tokenList.getCurToken();
-				currentP->lineNum = token.lineNum;
+				currentT = tokenList.getCurToken();
+				currentP->lineNum = currentT.lineNum;
 			}
 			else
 			{
-				throw std::exception(
+				throw std::runtime_error(
 					("ERROR: Except to get: " + std::string(TokenTypeName(symbolStack.top().symbolName.tokenType))
-					 + " but got: " + TokenTypeName(token.type) + " at line " + std::to_string(token.lineNum)
-					 + " column " + std::to_string(token.colNum)).c_str()
+					 + " but got: " + TokenTypeName(currentT.type) + " at line " + std::to_string(currentT.lineNum)
+					 + " column " + std::to_string(currentT.colNum)).c_str()
 				);
 			}
 		}
 		else
 		{
 			NonTerminalType line = symbolStack.top().symbolName.nonTerminalType;
-			TokenType col = token.type;
+			TokenType col = currentT.type;
 			std::function<void()> preFun = predictTable[PredictTableKey(line, col)];
 			symbolStack.pop();
+			std::cout << "Call predictable table line: " + std::string(NonTerminalTypeName(line)) + " colomn: " + TokenTypeName(col) + "\n";
 			preFun();
 		}
 
 	}
-	if (token.type != TokenType::EOF_) {
-		throw std::exception(("ERROR: Unexcept end of file at line " + std::to_string(token.lineNum)).c_str());
+	if (currentT.type != TokenType::EOF_) {
+		throw std::runtime_error(("ERROR: Unexcept end of file at line " + std::to_string(currentT.lineNum)).c_str());
 	}
 	return root;
+}
+
+void Parser::printTree(ASTNodeBase* t, int layer)
+{
+	if (!t) return;
+	std::cout << std::string(layer, '\t');
+	std::cout << *t;
+	for (int i = 0; i < 3; ++i)
+	{
+		if (t->child[i]) printTree(t->child[i], layer + 1);
+	}
+	if (t->sibling) printTree(t->sibling, layer);
 }
 
 void Parser::initPredictTable()
 {
 	predictTable.clear();
-	insertPredictTable(NonTerminalType::PROGRAM,
-					   { TokenType::PROGRAM },
-					   std::function<void()>([this]
-											 {
-												 pushSymbolStack({ GetNonTerminal(NonTerminalType::PROGRAM_BODY),
-																 GetNonTerminal(NonTerminalType::DECLARE_PART),
-															 GetNonTerminal(NonTerminalType::PROGRAM_HEAD)
-																 });
-											 }
-											 )
+	insertPredictTable(
+		NonTerminalType::PROGRAM,		   
+		{ TokenType::PROGRAM },
+		std::function<void()>(
+			[this]
+			{
+				std::cout << "Call process 1\n";
+				pushSymbolStack({ 
+								GetTerminal(TokenType::DOT),
+								GetNonTerminal(NonTerminalType::PROGRAM_BODY),
+								GetNonTerminal(NonTerminalType::DECLARE_PART),
+								GetNonTerminal(NonTerminalType::PROGRAM_HEAD)
+							});
+			}
+				)
 	);
 	insertPredictTable(
 		NonTerminalType::PROGRAM_HEAD,
@@ -82,6 +101,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 2\n";
 				this->process2();
 			}
 				)
@@ -92,6 +112,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 3\n";
 				this->process3();
 			}
 				)
@@ -102,6 +123,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 4\n";
 				pushSymbolStack({ 
 					GetNonTerminal(NonTerminalType::PROC_DECPART),
 					GetNonTerminal(NonTerminalType::VAR_DEC),
@@ -115,7 +137,9 @@ void Parser::initPredictTable()
 		{ TokenType::VAR, TokenType::PROCEDURE, TokenType::BEGIN },
 		std::function<void()>(
 			[]
-			{}
+			{
+				std::cout << "Call process 5\n";
+			}
 				)
 	);
 	insertPredictTable(
@@ -124,6 +148,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 6\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::TYPE_DECLATRATION)
 								});
@@ -136,6 +161,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 7\n";
 				this->process7();
 			}
 				)
@@ -146,6 +172,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 8\n";
 				this->process8();
 			}
 				)
@@ -156,6 +183,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 9\n";
 				this->process9();
 			}
 				)
@@ -166,6 +194,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 10\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::TYPE_DEC_LIST)
 								});
@@ -178,6 +207,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 11\n";
 				storeTokenSem(TokenType::IDENTIFIER);
 			}
 				)
@@ -188,6 +218,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 12\n";
 				this->process12();
 			}
 				)
@@ -198,6 +229,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 13\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::STRUCT_TYPE)
 								});
@@ -210,6 +242,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 14\n";
 				this->process14();
 			}
 				)
@@ -220,6 +253,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 15\n";
 				this->process15();
 			}
 				)
@@ -230,6 +264,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 16\n";
 				this->process16();
 			}
 				)
@@ -240,6 +275,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 17\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::ARRAY_TYPE)
 								});
@@ -252,6 +288,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 18\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::REC_TYPE)
 								});
@@ -264,6 +301,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 19\n";
 				this->process19();
 			}
 				)
@@ -274,6 +312,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 20\n";
 				this->process20();
 			}
 				)
@@ -284,6 +323,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 21\n";
 				this->process21();
 			}
 				)
@@ -294,6 +334,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 22\n";
 				this->process22();
 			}
 				)
@@ -304,6 +345,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 23\n";
 				this->process23();
 			}
 				)
@@ -314,6 +356,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 24\n";
 				this->process24();
 			}
 				)
@@ -324,6 +367,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 25\n";
 				this->process25();
 			}
 				)
@@ -334,6 +378,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 26\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::FIELD_DEC_LIST)
 								});
@@ -346,6 +391,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 27\n";
 				this->process27();
 			}
 				)
@@ -356,6 +402,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 28\n";
 			}
 				)
 	);
@@ -365,6 +412,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 29\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::ID_LIST),
 					GetTerminal(TokenType::COMMA)
@@ -378,6 +426,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 30\n";
 			}
 				)
 	);
@@ -387,6 +436,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 31\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::VAR_DECLARATION)
 								});
@@ -399,6 +449,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 32\n";
 				this->process32();
 			}
 				)
@@ -409,6 +460,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 33\n";
 				this->process33();
 			}
 				)
@@ -419,6 +471,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 34\n";
 				ASTStack.pop();
 			}
 				)
@@ -429,6 +482,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 35\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::VAR_DEC_LIST)
 								});
@@ -441,6 +495,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 36\n";
 				this->process36();
 			}
 				)
@@ -451,6 +506,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 37\n";
 			}
 				)
 	);
@@ -460,6 +516,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 38\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::VAR_ID_LIST),
 					GetTerminal(TokenType::COMMA)
@@ -473,6 +530,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 39\n";
 			}
 				)
 	);
@@ -482,6 +540,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 40\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PROC_DEC)
 								});
@@ -494,6 +553,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 41\n";
 				process41();
 			}
 				)
@@ -504,6 +564,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 42\n";
 			}
 				)
 	);
@@ -513,6 +574,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 43\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PROC_DEC)
 								});
@@ -525,6 +587,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 44\n";
 				storeTokenSem(TokenType::IDENTIFIER);
 			}
 				)
@@ -535,6 +598,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 45\n";
 				ASTStack.pop();
 			}
 				)
@@ -545,6 +609,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 46\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PARAM_LIST)
 								});
@@ -557,6 +622,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 47\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PARAM_MORE),
 					GetNonTerminal(NonTerminalType::PARAM)
@@ -570,6 +636,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 48\n";
 				process48();
 			}
 				)
@@ -580,6 +647,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 49\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PARAM_DEC_LIST),
 					GetTerminal(TokenType::SEMICOLON)
@@ -593,6 +661,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 50\n";
 				process50();
 			}
 				)
@@ -603,6 +672,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 51\n";
 				process51();
 			}
 				)
@@ -613,6 +683,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 52\n";
 				process52();
 			}
 				)
@@ -623,6 +694,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 53\n";
 			}
 				)
 	);
@@ -632,6 +704,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 54\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::FORM_LIST),
 					GetTerminal(TokenType::COMMA)
@@ -645,6 +718,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 55\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::DECLARE_PART)
 								});
@@ -657,6 +731,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 56\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::PROGRAM_BODY)
 								});
@@ -669,6 +744,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 57\n";
 				process57();
 			}
 				)
@@ -679,6 +755,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 58\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::STM_MORE),
 					GetNonTerminal(NonTerminalType::STM)
@@ -692,6 +769,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 59\n";
 				ASTStack.pop();
 			}
 				)
@@ -702,6 +780,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 60\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::STM_LIST),
 					GetTerminal(TokenType::SEMICOLON)
@@ -715,6 +794,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 61\n";
 				process61();
 			}
 				)
@@ -725,6 +805,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 62\n";
 				process62();
 			}
 				)
@@ -735,6 +816,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 63\n";
 				process63();
 			}
 				)
@@ -745,6 +827,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 64\n";
 				process64();
 			}
 				)
@@ -755,6 +838,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 65\n";
 				process65();
 			}
 				)
@@ -765,6 +849,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 66\n";
 				process66();
 			}
 				)
@@ -775,6 +860,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 67\n";
 				process67();
 			}
 				)
@@ -785,6 +871,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 68\n";
 				process68();
 			}
 				)
@@ -795,6 +882,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 69\n";
 				process69();
 			}
 				)
@@ -805,6 +893,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 70\n";
 				process70();
 			}
 				)
@@ -815,6 +904,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 71\n";
 				process71();
 			}
 				)
@@ -825,6 +915,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 72\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::BRACKET_CLOSE),
 					GetNonTerminal(NonTerminalType::IN_VAR),
@@ -840,6 +931,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 73\n";
 				storeTokenSem(TokenType::IDENTIFIER);
 			}
 				)
@@ -850,6 +942,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 74\n";
 				process74();
 			}
 				)
@@ -861,6 +954,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 75\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::RETURN)
 								});
@@ -873,6 +967,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 76\n";
 				process76();
 			}
 				)
@@ -883,6 +978,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 77\n";
 				ASTStack.pop();
 			}
 				)
@@ -893,6 +989,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 78\n";
 				process78();
 			}
 				)
@@ -903,6 +1000,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
+				std::cout << "Call process 79\n";
 			}
 				)
 	);
@@ -912,6 +1010,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 80\n";
 				process80();
 			}
 				)
@@ -922,6 +1021,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 81\n";
 				process81();
 			}
 				)
@@ -932,6 +1032,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 82\n";
 				process82();
 			}
 				)
@@ -942,6 +1043,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 83\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::OTHER_TERM),
 					GetNonTerminal(NonTerminalType::TERM)
@@ -959,6 +1061,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 84\n";
 				process84();
 			}
 				)
@@ -969,6 +1072,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 85\n";
 				process85();
 			}
 				)
@@ -979,6 +1083,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 86\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::OTHER_FACTOR),
 					GetNonTerminal(NonTerminalType::FACTOR)
@@ -997,7 +1102,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[]
 			{
-
+				std::cout << "Call process 87\n";
 			}
 				)
 	);
@@ -1007,6 +1112,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 88\n";
 				process88();
 			}
 				)
@@ -1017,6 +1123,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 89\n";
 				process89();
 			}
 				)
@@ -1027,6 +1134,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 90\n";
 				process90();
 			}
 				)
@@ -1037,6 +1145,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 91\n";
 				pushSymbolStack({
 					GetNonTerminal(NonTerminalType::VARIABLE)
 								});
@@ -1049,6 +1158,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 92\n";
 				process92();
 			}
 				)
@@ -1064,6 +1174,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 93\n";
 				process93();
 			}
 				)
@@ -1074,6 +1185,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 94\n";
 				process94();
 			}
 				)
@@ -1084,6 +1196,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 95\n";
 				process95();
 			}
 				)
@@ -1094,16 +1207,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
-				process96();
-			}
-				)
-	);
-	insertPredictTable(
-		NonTerminalType::FIELD_VAR_MORE,
-		{ TokenType::IDENTIFIER },
-		std::function<void()>(
-			[this]
-			{
+				std::cout << "Call process 96\n";
 				process96();
 			}
 				)
@@ -1119,16 +1223,19 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 97\n";
 				process97();
 			}
 				)
 	);
+
 	insertPredictTable(
 		NonTerminalType::FIELD_VAR_MORE,
 		{ TokenType::SQUARE_BRACKET_OPEN },
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 98\n";
 				process94();
 			}
 				)
@@ -1139,6 +1246,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 99\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::LESS_THAN)
 								});
@@ -1151,6 +1259,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 100\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::EQUAL)
 								});
@@ -1163,6 +1272,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 101\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::ADD)
 								});
@@ -1175,6 +1285,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 102\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::MINUS)
 								});
@@ -1187,6 +1298,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 103\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::MULTIPLY)
 								});
@@ -1199,6 +1311,7 @@ void Parser::initPredictTable()
 		std::function<void()>(
 			[this]
 			{
+				std::cout << "Call process 104\n";
 				pushSymbolStack({
 					GetTerminal(TokenType::DIVIDE)
 								});
@@ -1244,7 +1357,7 @@ void Parser::linkStackTop(ASTNodeBase* p)
 {
 	if (ASTStack.empty())
 	{
-		throw std::exception("ERROR: AST Stack empty.");
+		throw std::runtime_error("ERROR: AST Stack empty.");
 	}
 	ASTNodeBase** ptr = ASTStack.top();
 	ASTStack.pop();
@@ -1272,6 +1385,11 @@ void Parser::process2()
 */
 void Parser::process3()
 {
+	/*
+	pushSymbolStack({
+					GetTerminal(TokenType::SEMICOLON)
+					});
+	*/
 	storeTokenSem(TokenType::IDENTIFIER);
 }
 
@@ -1342,7 +1460,8 @@ void Parser::process12()
 */
 void Parser::process14()
 {
-	*tempDecKindPtr = ASTDecKind::ID_K;
+	((ASTDecNode*)currentP)->decKind = ASTDecKind::ID_K;
+	//*tempDecKindPtr = ASTDecKind::ID_K;
 	storeTokenSem(TokenType::IDENTIFIER);
 }
 /*
@@ -1772,6 +1891,11 @@ void Parser::process68()
 */
 void Parser::process69()
 {
+	pushSymbolStack({
+			GetNonTerminal(NonTerminalType::EXP),
+			GetTerminal(TokenType::ASSIGN),
+			GetNonTerminal(NonTerminalType::VARI_MORE)
+					});
 	ASTStack.push(&currentP->child[1]);
 	currentP = currentP->child[0];
 	initOpStack();
@@ -1826,10 +1950,10 @@ void Parser::process71()
 void Parser::process74()
 {
 	pushSymbolStack({
-			GetTerminal(TokenType::WRITE),
-			GetTerminal(TokenType::BRACKET_OPEN),
+			GetTerminal(TokenType::BRACKET_CLOSE),
 			GetNonTerminal(NonTerminalType::EXP),
-			GetTerminal(TokenType::BRACKET_CLOSE)
+			GetTerminal(TokenType::BRACKET_OPEN),
+			GetTerminal(TokenType::WRITE)
 					});
 	ASTStack.push(&currentP->child[0]);
 	initOpStack();
@@ -1882,7 +2006,7 @@ void Parser::process81()
 			GetNonTerminal(NonTerminalType::EXP)
 					});
 	initOpStack();
-	getExpResault = false;
+	getExpResult = false;
 }
 /*
 建立一个操作符类型表达式节点，记录这个关系运算符的内容。比较
@@ -1893,7 +2017,7 @@ void Parser::process81()
 前操作符指针压入操作符栈。否则，直接将当前指针压入操作符栈。
 另外，选择了这个产生式，说明作为关系运算符左分量的表达式Exp,
 已经处理完，要进入右分量的处理，作为右分量的Exp结束后，整个
-关系表达式也结束，故设置在函数process840中结束，得到表达式结
+关系表达式也结束，故设置在函数process84中结束，得到表达式结
 果标识getExpResult为真。
 */
 void Parser::process82()
@@ -1919,7 +2043,7 @@ void Parser::process82()
 		operandStack.push(t);
 	}
 	operatorStack.push((ASTExpNode*)currentP);
-	getExpResault = true;
+	getExpResult = true;
 }
 /*
 由于write,return等语句以右括号)作为参数表达式的结束，而且表达
@@ -1945,10 +2069,10 @@ getExpResult为真或者getExpResult2为真，则代表当前表达式处理结
 */
 void Parser::process84()
 {
-	if (currentT.type == TokenType::BRACKET_CLOSE && expFlag == 0)
+	if (!(currentT.type == TokenType::BRACKET_CLOSE && expFlag != 0))
 	{
 		//表达式结束
-		if (getExpResault || getExpResault2)
+		if (getExpResult || getExpResult2)
 		{
 			while (operatorStack.top()->expAttr.op != ASTOpType::STACK_END)
 			{
@@ -1967,7 +2091,8 @@ void Parser::process84()
 			currentP = (ASTNodeBase*)operandStack.top();
 			operandStack.pop();
 			linkStackTop(currentP);
-			getExpResault2 = false;
+			if (getExpResult && !getExpResult2) getExpResult = false;
+			else getExpResult2 = false;
 		}
 	}
 	else
@@ -2023,6 +2148,7 @@ void Parser::process85()
 		operandStack.push(t);
 	}
 	operatorStack.push((ASTExpNode*)currentP);
+	getExpResult = true;
 }
 /*
 遇到乘法运算符，建立一个表达式节点，具体类型是操作符类型，记
@@ -2080,7 +2206,7 @@ void Parser::process89()
 void Parser::process90()
 {
 	pushSymbolStack({
-			GetTerminal(TokenType::INTEGER),
+			GetTerminal(TokenType::INT),
 					});
 	currentP = (ASTNodeBase*)GetASTExpConstNode();
 	((ASTExpNode*)currentP)->expAttr.val = std::stoi(currentT.sem);
@@ -2122,7 +2248,7 @@ void Parser::process94()
 	((ASTExpNode*)currentP)->expAttr.varType = ASTVarType::ARRAY_MEMB_V;
 	ASTStack.push(&currentP->child[0]);
 	initOpStack();
-	getExpResault2 = true;
+	getExpResult2 = true;
 }
 /*
 产生式右部入符号栈；当前变量节点的具体类型设置为域成员类型变

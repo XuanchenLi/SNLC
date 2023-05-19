@@ -99,6 +99,19 @@ int GetOpPriority(ASTOpType op)
     }
 }
 
+const char* ExpVarTypeName(ASTVarType c)
+{
+    switch (c)
+    {
+
+#define DEF_TYPE(v) case ASTVarType::v : return #v;
+        VARTYPE_TABLE()
+#undef DEF_TYPE
+    default:
+        return "UNDEFINED";
+    }
+}
+
 
 ASTNodeBase* GetASTLabelNode(ASTNodeKind k)
 {
@@ -195,4 +208,99 @@ ASTOpType TokenType2OpType(TokenType t)
                                          + "to exp op type").c_str());
         break;
     }
+}
+
+void printDecK(std::ostream& os, const ASTNodeBase& t)
+{
+    const ASTDecNode* tmp = (const ASTDecNode*)&t;
+    if (tmp->decKind != ASTDecKind::PROC_K && tmp->decKind != ASTDecKind::ARRAY_K)
+    {
+        os << DecKindName(tmp->decKind) << " ";
+        for (auto i : tmp->nodeBase.names)
+        {
+            os << i << " ";
+        }
+    }
+    else if (tmp->decKind == ASTDecKind::PROC_K)
+    {
+        if (tmp->decAttr.procAttr.paramType == ASTParamType::VAL_PARAM_TYPE)
+        {
+            os << "value param: ";
+        }
+        else
+        {
+            os << "variable param: ";
+        }
+        
+    }
+    else
+    {
+        os << DecKindName(tmp->decKind) << " ";
+        os << tmp->nodeBase.names[0] + "[" + std::to_string(tmp->decAttr.arrayAttr.low) + ".."
+            + std::to_string(tmp->decAttr.arrayAttr.up) + "] of " + DecKindName(tmp->decAttr.arrayAttr.itemType);
+    }
+}
+void printStmtK(std::ostream& os, const ASTNodeBase& t)
+{
+    const ASTStmtNode* tmp = (const ASTStmtNode*)&t;
+    os << StmtKindName(tmp->stmtKind) << " ";
+    for (auto i : tmp->nodeBase.names)
+    {
+        os << i << " ";
+    }
+}
+void printExpK(std::ostream& os, const ASTNodeBase& t)
+{
+    const ASTExpNode* tmp = (const ASTExpNode*)&t;
+    os << ExpKindName(tmp->expKind) << " ";
+    if (tmp->expKind == ASTEXPKind::CONST_K)
+    {
+        os << std::to_string(tmp->expAttr.val) << " ";
+    }
+    else if (tmp->expKind == ASTEXPKind::ID_K)
+    {
+        os << ExpVarTypeName(tmp->expAttr.varType) << " ";
+        for (auto i : tmp->nodeBase.names)
+        {
+            os << i << " ";
+        }
+    }
+    else
+    {
+        os << ExpOpName(tmp->expAttr.op) << " ";
+    }
+}
+std::ostream& operator<<(std::ostream& os, const ASTNodeBase& t)
+{
+    os << ASTNodeKindName(t.nodeKind) << " ";
+    switch (t.nodeKind)
+    {
+    case ASTNodeKind::PRO_K:
+        break;
+    case ASTNodeKind::PHEAD_K:
+        os <<t.names[0];
+        break;
+    case ASTNodeKind::TYPE_K:
+        break;
+    case ASTNodeKind::VAR_K:
+        break;
+    case ASTNodeKind::PROC_DEC_K:
+        os <<t.names[0];
+        break;
+    case ASTNodeKind::STM_L_K:
+        break;
+    case ASTNodeKind::DEC_K:
+        printDecK(os, t);
+        break;
+    case ASTNodeKind::STMT_K:
+        printStmtK(os, t);
+        break;
+    case ASTNodeKind::EXP_K:
+        printExpK(os, t);
+        break;
+    default:
+        break;
+    }
+    os << "\n";
+    return os;
 }

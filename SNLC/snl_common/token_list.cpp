@@ -1,3 +1,4 @@
+#include <iostream>
 #include "token_list.h"
 
 
@@ -7,6 +8,7 @@ Token TokenList::getCurToken()
 	{
 		throw std::out_of_range("Token–Ú¡–‘ΩΩÁ£°");
 	}
+	std::cout << std::move(tokens[curIdx]) << std::endl;
 	return tokens[curIdx];
 }
 

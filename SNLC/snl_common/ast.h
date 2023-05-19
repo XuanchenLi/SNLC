@@ -116,7 +116,7 @@ enum class ASTVarType
     VARTYPE_TABLE()
 #undef DEF_TYPE
 };
-
+const char* ExpVarTypeName(ASTVarType);
 
 // 语法树表达式节点的检查类型
 #define EXP_CHECK_TYPE_TABLE()\
@@ -176,13 +176,14 @@ typedef struct ASTArrayAttr
 //  语法树基节点，包含各种节点都有的属性
 typedef struct ASTNodeBase
 {
+    ASTNodeBase() :lineNum(0), sibling(nullptr) { std::memset(child, 0, sizeof(child)); }
     int lineNum;
     ASTNodeKind nodeKind;
     ASTNodeBase* sibling;
     ASTNodeBase* child[MAXCHILDREN];
     std::vector<std::string> names;     //标识符名字
     std::vector<unsigned long int> tablePtrs;   //各个标识符符号表入口
-
+    friend std::ostream& operator<<(std::ostream&, const ASTNodeBase&);
 }ASTNodeBase;
 
 
