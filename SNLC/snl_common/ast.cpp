@@ -92,6 +92,9 @@ int GetOpPriority(ASTOpType op)
     case ASTOpType::STACK_END:
         return 0;
         break;
+    case ASTOpType::BRACKET_OPEN:
+        return 0;
+        break;
     default:
         throw std::exception("ERROR: Unknown AST Operator.");
         return -1;

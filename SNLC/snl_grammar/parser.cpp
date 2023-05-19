@@ -53,7 +53,7 @@ ASTNodeBase* Parser::parse(TokenList& tokenList)
 			TokenType col = currentT.type;
 			std::function<void()> preFun = predictTable[PredictTableKey(line, col)];
 			symbolStack.pop();
-			std::cout << "Call predictable table line: " + std::string(NonTerminalTypeName(line)) + " colomn: " + TokenTypeName(col) + "\n";
+			//std::cout << "Call predictable table line: " + std::string(NonTerminalTypeName(line)) + " colomn: " + TokenTypeName(col) + "\n";
 			preFun();
 		}
 
@@ -843,7 +843,7 @@ void Parser::initPredictTable()
 	);
 	insertPredictTable(
 		NonTerminalType::STM,
-		{ TokenType::IDENTIFIER },
+		{ TokenType::IDENTIFIER},
 		std::function<void()>(
 			[this]
 			{
@@ -854,7 +854,7 @@ void Parser::initPredictTable()
 	);
 	insertPredictTable(
 		NonTerminalType::ASS_CALL,
-		{ TokenType::ASSIGN },
+		{ TokenType::ASSIGN, TokenType::SQUARE_BRACKET_OPEN},
 		std::function<void()>(
 			[this]
 			{
@@ -2001,7 +2001,7 @@ void Parser::process80()
 处理条件表达式，在if和while语句中将用到条件表达式，在这里对
 表达式的操作符栈进行初始化，压入一个优先级最低的操作符类型节
 点的指针。另外，将变量getExpResult赋值为假，一般表达式，在遇
-到process840时，表达式处理结束，弹出表达式的操作数栈和操作符
+到process84时，表达式处理结束，弹出表达式的操作数栈和操作符
 栈，得到表达式部分的树结构，并连入语句中；而对于关系表达式，
 关系运算符左部的表达式处理结束，整个表达式并未处理完，不弹栈，
 处理完右部的表达式时，才结束。
@@ -2100,9 +2100,11 @@ void Parser::process84()
 			currentP = (ASTNodeBase*)operandStack.top();
 			operandStack.pop();
 			linkStackTop(currentP);
-			if (getExpResult && !getExpResult2) getExpResult = false;
-			else getExpResult2 = false;
-			//getExpResult2 = false;
+			
+			//if (getExpResult && !getExpResult2) getExpResult = false;
+			//else getExpResult2 = false;
+			getExpResult2 = false;
+			//printTree(root, 0);
 		}
 	}
 	else
@@ -2158,7 +2160,7 @@ void Parser::process85()
 		operandStack.push(t);
 	}
 	operatorStack.push((ASTExpNode*)currentP);
-	getExpResult = true;
+	//getExpResult = true;
 }
 /*
 遇到乘法运算符，建立一个表达式节点，具体类型是操作符类型，记

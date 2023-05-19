@@ -24,6 +24,9 @@ private:
 	void pushSymbolStack(std::vector<SymbolStackItem>);
 	void storeTokenSem(TokenType);
 	void linkStackTop(ASTNodeBase*);
+	/*
+	* 旁边有 ‘//’ 代表教材有误
+	*/
 	void process2();
 	void process3();
 	void process7();
@@ -44,7 +47,7 @@ private:
 	void process32();
 	void process33();
 	void process36();
-	void process40();  //教材有误？
+	void process40();  //
 	void process41();
 	void process48();
 	void process50();
@@ -63,19 +66,19 @@ private:
 	void process70();
 	void process71();
 	void process74(); //
-	void process76(); //教材有误？
+	void process76(); //
 	void process78(); //
 	void process80();
 	void process81();
-	void process82();
+	void process82(); //
 	void process84();
-	void process85(); //教材有误？
+	void process85(); //
 	void process88();
 	void process89();
 	void process90();
 	void process92();
 	void process93();
-	void process94();
+	void process94(); //
 	void process95();
 	void process96();
 	void process97();
