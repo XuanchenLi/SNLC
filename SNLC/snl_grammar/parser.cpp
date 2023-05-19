@@ -541,9 +541,7 @@ void Parser::initPredictTable()
 			[this]
 			{
 				std::cout << "Call process 40\n";
-				pushSymbolStack({
-					GetNonTerminal(NonTerminalType::PROC_DEC)
-								});
+				process40();
 			}
 				)
 	);
@@ -611,7 +609,7 @@ void Parser::initPredictTable()
 			{
 				std::cout << "Call process 46\n";
 				pushSymbolStack({
-					GetNonTerminal(NonTerminalType::PARAM_LIST)
+					GetNonTerminal(NonTerminalType::PARAM_DEC_LIST)
 								});
 			}
 				)
@@ -632,7 +630,7 @@ void Parser::initPredictTable()
 	);
 	insertPredictTable(
 		NonTerminalType::PARAM_MORE,
-		{ TokenType::BRACKET_OPEN },
+		{ TokenType::BRACKET_CLOSE },
 		std::function<void()>(
 			[this]
 			{
@@ -1657,8 +1655,9 @@ void Parser::process36()
 void Parser::process40()
 {
 	symbolStack.push(GetNonTerminal(NonTerminalType::PROC_DEC));
-	currentP = GetASTLabelNode(ASTNodeKind::PROC_DEC_K);
+	currentP = GetASTLabelNode(ASTNodeKind::PROC_K);
 	linkStackTop(currentP);
+	//printTree(root, 0);
 	ASTStack.push(&currentP->child[0]);
 }
 /*
@@ -1686,7 +1685,7 @@ void Parser::process41()
 		GetNonTerminal(NonTerminalType::PROC_NAME),
 		GetTerminal(TokenType::PROCEDURE)
 					});
-	currentP = (ASTNodeBase*)GetASTDecNode(ASTDecKind::PROC_K);
+	currentP = (ASTNodeBase*)GetASTDecNode(ASTDecKind::PROC_DEC_K);
 	linkStackTop(currentP);
 	ASTStack.push(&currentP->sibling);
 	ASTStack.push(&currentP->child[2]);
@@ -1775,6 +1774,7 @@ void Parser::process57()
 	currentP = GetASTLabelNode(ASTNodeKind::STM_L_K);
 	linkStackTop(currentP);
 	ASTStack.push(&currentP->child[0]);
+
 }
 /*
 建一个语句类型节点，具体类型值设为条件语句IfK,从语法树栈中
@@ -1899,6 +1899,7 @@ void Parser::process69()
 	ASTStack.push(&currentP->child[1]);
 	currentP = currentP->child[0];
 	initOpStack();
+	getExpResult = true;
 }
 /*
 
@@ -1957,12 +1958,18 @@ void Parser::process74()
 					});
 	ASTStack.push(&currentP->child[0]);
 	initOpStack();
+	getExpResult = true;
 }
 /*
 处理函数调用语句，首先压入函数调用语句的第一(二？)个儿子节点。
 */
 void Parser::process76()
 {
+	pushSymbolStack({
+			GetTerminal(TokenType::BRACKET_CLOSE),
+			GetNonTerminal(NonTerminalType::ACT_PARAM_LIST),
+			GetTerminal(TokenType::BRACKET_OPEN)
+					});
 	ASTStack.push(&currentP->child[1]);
 }
 /*
@@ -1976,6 +1983,7 @@ void Parser::process78()
 			GetNonTerminal(NonTerminalType::EXP)
 					});
 	initOpStack();
+	getExpResult = true;
 }
 /*
 还有别的实参，产生式右部入符号栈；压当前实参节点的兄弟节
@@ -2069,6 +2077,7 @@ getExpResult为真或者getExpResult2为真，则代表当前表达式处理结
 */
 void Parser::process84()
 {
+	//printTree(root, 0);
 	if (!(currentT.type == TokenType::BRACKET_CLOSE && expFlag != 0))
 	{
 		//表达式结束
@@ -2093,6 +2102,7 @@ void Parser::process84()
 			linkStackTop(currentP);
 			if (getExpResult && !getExpResult2) getExpResult = false;
 			else getExpResult2 = false;
+			//getExpResult2 = false;
 		}
 	}
 	else
@@ -2241,13 +2251,14 @@ void Parser::process93()
 void Parser::process94()
 {
 	pushSymbolStack({
-			GetTerminal(TokenType::SQUARE_BRACKET_OPEN),
+			GetTerminal(TokenType::SQUARE_BRACKET_CLOSE),
 			GetNonTerminal(NonTerminalType::EXP),
-			GetTerminal(TokenType::SQUARE_BRACKET_CLOSE)
+			GetTerminal(TokenType::SQUARE_BRACKET_OPEN)
 					});
 	((ASTExpNode*)currentP)->expAttr.varType = ASTVarType::ARRAY_MEMB_V;
 	ASTStack.push(&currentP->child[0]);
-	initOpStack();
+	//initOpStack();
+	operatorStack.push(GetASTExpOpNode(ASTOpType::STACK_END));
 	getExpResult2 = true;
 }
 /*

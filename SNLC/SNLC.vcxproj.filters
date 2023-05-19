@@ -79,6 +79,5 @@
     <None Include="supplement\snl.bnf" />
     <None Include="tests\test1.snl" />
     <None Include="tests\test2.snl" />
-    <None Include="tests\test3.snl" />
   </ItemGroup>
 </Project>

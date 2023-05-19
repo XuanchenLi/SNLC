@@ -213,15 +213,7 @@ ASTOpType TokenType2OpType(TokenType t)
 void printDecK(std::ostream& os, const ASTNodeBase& t)
 {
     const ASTDecNode* tmp = (const ASTDecNode*)&t;
-    if (tmp->decKind != ASTDecKind::PROC_K && tmp->decKind != ASTDecKind::ARRAY_K)
-    {
-        os << DecKindName(tmp->decKind) << " ";
-        for (auto i : tmp->nodeBase.names)
-        {
-            os << i << " ";
-        }
-    }
-    else if (tmp->decKind == ASTDecKind::PROC_K)
+    if (tmp->decAttr.procAttr.paramType != ASTParamType::NOT_PARAM)
     {
         if (tmp->decAttr.procAttr.paramType == ASTParamType::VAL_PARAM_TYPE)
         {
@@ -231,7 +223,19 @@ void printDecK(std::ostream& os, const ASTNodeBase& t)
         {
             os << "variable param: ";
         }
-        
+    }
+    if (tmp->decKind != ASTDecKind::ARRAY_K && tmp->decKind != ASTDecKind::PROC_DEC_K)
+    {
+        os << DecKindName(tmp->decKind) << " ";
+        for (auto i : tmp->nodeBase.names)
+        {
+            os << i << " ";
+        }
+    }
+    else if (tmp->decKind == ASTDecKind::PROC_DEC_K)
+    {
+        os << DecKindName(tmp->decKind) << " ";
+        os << t.names[0];
     }
     else
     {
@@ -268,6 +272,7 @@ void printExpK(std::ostream& os, const ASTNodeBase& t)
     else
     {
         os << ExpOpName(tmp->expAttr.op) << " ";
+
     }
 }
 std::ostream& operator<<(std::ostream& os, const ASTNodeBase& t)
@@ -284,8 +289,7 @@ std::ostream& operator<<(std::ostream& os, const ASTNodeBase& t)
         break;
     case ASTNodeKind::VAR_K:
         break;
-    case ASTNodeKind::PROC_DEC_K:
-        os <<t.names[0];
+    case ASTNodeKind::PROC_K:
         break;
     case ASTNodeKind::STM_L_K:
         break;

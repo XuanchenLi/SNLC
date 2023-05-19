@@ -20,7 +20,7 @@ void testParser(const char* path)
     Lexer lexer;
     TokenList tokenList = lexer.genTokens(fileReader);
     Parser parser;
-    //ASTNodeBase* rt = parser.parse(tokenList);
+    ASTNodeBase* rt = parser.parse(tokenList);
     try
     {
         ASTNodeBase* rt = parser.parse(tokenList);

@@ -59,12 +59,12 @@ private:
 	void process66();
 	void process67();
 	void process68();
-	void process69();
+	void process69(); //
 	void process70();
 	void process71();
-	void process74();
+	void process74(); //
 	void process76(); //½Ì²ÄÓÐÎó£¿
-	void process78();
+	void process78(); //
 	void process80();
 	void process81();
 	void process82();
