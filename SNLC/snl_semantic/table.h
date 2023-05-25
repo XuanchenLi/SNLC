@@ -29,16 +29,22 @@ protected:
 	ParamTable *ParaDecList(ASTNodeBase* currentP);
 	void Body(ASTNodeBase* currentP);
 	void statement(ASTStmtNode* currentP);
-	TypeIR* Expr(ASTNodeBase* currentP, AccessKind* Ekind);
+	TypeIR* arrayVar(ASTNodeBase* currentP);
+	TypeIR* Expr(ASTNodeBase* currentP);			/*, AccessKind* Ekind*/
 	void assignstatement(ASTStmtNode* currentP);
 	void ifstatment(ASTStmtNode* currentP);
 	void whilestatement(ASTStmtNode* currentP);
+	void callstatement(ASTStmtNode* currentP);
+	void paramstatemnt(ParamTable*,int level,ASTNodeBase* currentP);
+	void writestatemen(ASTNodeBase* currentP);
+	void readstatemen(ASTNodeBase* currentP);
+
 public:
 	void CreatTable();												//建一个符号表
 	void DestroyTable();											//撤销一个符号表
 	bool Enter(char* Id, AttributelR* AttribP, symTablePtr Entry);	//登记标识符和属性到符号表
 	bool FindEntry(char* id, bool diraction, symTablePtr Entry);				//号表中查找标识符
-	void PrintSymbTabl() {};														//打印符号表
+	void PrintSymbTabl();														//打印符号表
 private:
 	bool SearchoneTable(char* id, int currentLevel, symTablePtr Entry);			//号表中查找标识符
 

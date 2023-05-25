@@ -264,11 +264,10 @@ ParamTable* Table::ParaDecList(ASTNodeBase* currentP){
 		使param指向此地址表。
 	*/
 	if (currentP == nullptr) return nullptr;
-
-	const ASTDecNode* tmp = (const ASTDecNode*)&currentP;
+	this->VarDecList(currentP);//加入table
 
 	ParamTable* param = new struct ParamTable;
-	param->entry = this->scope.back().size();
+	param->entry = this->scope.back().size()-1;
 	param->next = ParaDecList(currentP->sibling);
 
 	return param;
@@ -282,30 +281,141 @@ void Table::Body(ASTNodeBase* currentP) {
 	const ASTStmtNode* tmp = (const ASTStmtNode*)&currentP;
 	while (tmp != nullptr) {
 		this->statement(tmp);
+		tmp = tmp->nodeBase.sibling;
 	}
 }
 
-void Table::statement(ASTStmtNode*& currentP) {
+void Table::statement(ASTStmtNode* currentP) {
 	/*
 		根据语法树节点中的kind项判断应该转向处理哪个语句类型函数。
 	*/
 	switch (currentP->stmtKind)
 	{
 	case ASTStmtKind::ASSIGN_K:
-		assignstatement(currentP);
+		this->assignstatement(currentP);
 		break;
-	case:ASTStmtKind::IF_K :
-		ifstatment(currentP);
+	case ASTStmtKind::IF_K:
+		this->ifstatment(currentP);
 		break;
 	case ASTStmtKind::WHILE_K:
-
+		this->whilestatement(currentP);
 		break;
 	case ASTStmtKind::CALL_K :
-
+		this->callstatement(currentP);
 		break;
 	default:
 		break;
 	}
+}
+
+
+TypeIR* Table::arrayVar(ASTNodeBase* currentP) {
+	/*
+		检查var:=var0[E]中var0是不是数组类型变量，E是不是和数组的
+		下标变量类型匹配。
+	*/
+	symTablePtr Entry;
+	if (this->FindEntry(currentP->names.back(), true, Entry)) {
+
+		//判断是否为数组
+		if (Entry->attrIR.kind != arrayTy) {
+			std::cout << currentP->names.back() << " id not array" << std::endl;
+			return nullptr;
+		}
+
+		//判断下标类型
+		const ASTExpNode* exp = (const ASTExpNode*)&currentP->child[0];
+		if (exp->expKind == ASTEXPKind::CONST_K&&Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind!=intTy){
+			std::coutstd::cout << currentP->names.back() << " index type incorrect" << std::endl;
+			return nullptr;
+		}
+		else if (exp->expKind == ASTEXPKind::ID_K) {
+			symTablePtr indexEntry;
+			if (this->FindEntry(exp->nodeBase.names.back(), true, indexEntry)) {
+				std::coutstd::cout << exp->nodeBase.names.back() << " not declare" << std::endl;
+				return nullptr;
+			}
+			if (indexEntry->attrIR.kind != Entry->attrIR.kind) {
+				std::coutstd::cout << currentP->names.back() << " index type incorrect" << std::endl;
+				return nullptr;
+			}
+		}
+	}
+	else {
+		//数组类型未声明
+		std::coutstd::cout << currentP->names.back() << " not declare" << std::endl;
+		return nullptr;
+	}
+	
+	return Entry->attrIR;
+}
+
+TypeIR* Table::Expr(ASTNodeBase* currentP) {
+	/*
+		表达式语义分析的重点是检查运算分量的类型相容性，求表达式的
+		类型。其中参数Ekind用来表示实参是变参还是值参。
+	*/
+	const ASTExpNode* exp = (const ASTExpNode*)&currentP;
+
+	if (exp->expKind == ASTEXPKind::OP_K) {
+		TypeIR* exlL = this->Expr(currentP->child[0]);
+		TypeIR* exlR = this->Expr(currentP->child[1]);
+
+		if (exlL->kind != arrayTy && exlR->kind != arrayTy) {
+			if (exlL->kind != exlR->kind) {
+				std::cout << "different type can not op" << std::endl;
+				exit(1);
+			}
+		}
+		else if (exlL.kind == arrayTy) {
+			if (exlR->kind == arrayTy) {
+				if (exlL->More.ArrayAttr.elemTy->kind != exlR->More.ArrayAttr.elemTy->kind) {
+					std::cout << "different type can not op" << std::endl;
+					exit(1);
+				}
+			}
+			else if (exlL->More.ArrayAttr.elemTy->kind != exlR->kind) {
+				std::cout << "different type can not op" << std::endl;
+				exit(1);
+			}
+			
+		}
+		else {
+			if (exlR->More.ArrayAttr.elemTy->kind != exlL->kind) {
+				std::cout << "different type can not op" << std::endl;
+				exit(1);
+			}
+		}
+		//求表达式计算类型  ##tipsbool类型不可运算未考虑
+		if (exp->expAttr.op == ASTOpType::EQ || exp->expAttr.op==ASTOpType::LT) {
+			
+			TypeIR* typeir = new TypeIR;
+			typeir->kind = boolTy;
+			return typeir;
+		}
+		else if (exp->expAttr.op == ASTOpType::MINUS || exp->expAttr.op == ASTOpType::PLUS
+			|| exp->expAttr.op == ASTOpType::PLUS || exp->expAttr.op == ASTOpType::OVER) {
+			
+			TypeIR* typeir = new TypeIR;
+			if (exlL->kind == arrayTy) typeir->kind = exlL->More.ArrayAttr.elemTy->kind;
+			else typeir->kind = exlL->kind;
+			return exlL;
+		}
+	}
+	else if(exp->expKind == ASTEXPKind::ID_K){
+
+		symTablePtr ptr;
+		this->FindEntry(exp->nodeBase.names.back(), true, ptr);
+		
+		return ptr->attrIR;
+	}
+	else {
+		//默认const都是整形常数
+		TypeIR* typeir = new TypeIR;
+		typeir->kind = intTy;
+		return typeir;
+	}
+	
 }
 
 void Table::assignstatement(ASTStmtNode* currentP) {
@@ -317,6 +427,12 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 	const ASTExpNode* tmp1 = (const ASTExpNode*)&currentP->nodeBase.child[0];
 	const ASTExpNode* tmp2 = (const ASTExpNode*)&currentP->nodeBase.child[1];
 	if (this->FindEntry(currentP->nodeBase.child[0]->names.back(), true, Exp1) && this->FindEntry(currentP->nodeBase.child[1]->names.back(), true, Exp2)) {
+
+		//如果存在array需要检验array EXP
+		if (Exp1->attrIR.kind == arrayTy) this->arrayType(currentP->nodeBase.child[0]);
+		if (ExpR->attrIR.kind == arrayTy) this->arrayType(currentP->nodeBase.child[1]);
+
+		//检验运算数类型
 		if (tmp1->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::CONST_K) {
 			if (Exp1->attrIR.idtype->kind != Exp2->attrIR.idtype->kind) {
 				std::cout << "type unfit" << endl;
@@ -329,6 +445,7 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 		}
 		else {
 			if (tmp1->expKind == ASTEXPKind::CONST_K) {
+				
 				if (Exp2->attrIR.idtype->kind == arrayTy&&Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind==charTy) {
 					std::cout << "array elemtype unfit" << endl;
 					return;
@@ -345,12 +462,101 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 				}
 			}
 		}
-
 	}
 }
 
 void Table::ifstatment(ASTStmtNode* currentP) {
+	/*
+		检查条件表达式是否为bool类型，处理then语句序列部分和else
+		语句序列部分。
+	*/
+	
+	TypeIR* item = this->Expr(currentP->nodeBase.child[0]);
+	if (item->kind != boolTy) {
+		std::cout << "if condition stmt not bool" << std::endl;
+		return;
+	}
 
+	//处理then和else部分
+	for (int i = 1; i < 3; i++) this->Body(currentP->nodeBase.child[i]);
+	
+}
+
+
+void Table::whilestatement(ASTStmtNode* currentP) {
+	/*
+		检查条件表达式是否为bool类型，处理语句序列部分。
+	*/
+
+	TypeIR* item = this->Expr(currentP->nodeBase.child[0]);
+	if (item->kind != boolTy) {
+		std::cout << "while condition stmt not bool" << std::endl;
+		return;
+	}
+
+	//处理while循环体
+	this->Body(currentP->nodeBase.child[1]);
+
+}
+
+void Table::callstatement(ASTStmtNode* currentP) {
+	/*
+		函数调用语句的语义分析首先检查符号表求出其属性中的Param部
+		分(形参符号表项地址表),并用它检查形参和实参之间的对应关系
+		是否正确。
+	*/
+
+	const ASTExpNode* proc = (const ASTExpNode*)&currentP->nodeBase.child[0];
+	const ASTExpNode* param = (const ASTExpNode*)&currentP->nodeBase.child[1];
+
+	//差询过程名是否存在
+	symTablePtr procEntry;
+	if (!this->FindEntry(proc->nodeBase.names.back(), true,procEntry)) {
+		std::cout << "procedure " << proc->nodeBase.names.back() << " not exist" << std::endl;
+		return;
+	}
+
+	//查询参数是否存在 并进行匹配
+	this->paramstatemnt(procEntry->attrIR.More.param, procEntry->attrIR.More.level, currentP->nodeBase.child[1]);
+	
+	return;
+}
+
+void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP) {
+	/*
+		查询参数是否存在 并进行匹配
+	*/
+	if (currentP == nullptr) {
+		if (paramItem != nullptr)std::cout << "param not emough" << std::endl;
+		return;
+	}
+
+	const ASTExpNode* param = (const ASTExpNode*)&currentP;
+	symTablePtr paramEntry;
+	if (paramItem!=nullptr &&this->FindEntry(param->nodeBase.names.back(), true, paramEntry)) {
+		if (this->scope.at(level).at(paramItem->entry)->attrIR.kind != paramEntry->attrIR.kind) {
+			std::cout <<  " param  not same" << std::endl;
+		}
+	}
+	else {
+		if (paramItem != nullptr)	std::cout << " param  not declare" << std::endl;
+		else std::cout << "too many param  " << std::endl;
+	}
+
+	this->paramstatemnt(paramItem->next,level,currentP->sibling)
+}
+
+
+void Table::writestatemen(ASTNodeBase* currentP) {
+	/*
+		检查要读入的变量有无声明和是否为变量。
+	*/
+}
+
+void Table::readstatemen(ASTNodeBase* currentP) {
+	/*
+		分析写语句中的表达式是否合法。
+	*/
 
 }
 
@@ -408,6 +614,4 @@ void Table:: Analyze(ASTNodeBase* currentP) {
 	default:
 		break;
 	}
-
-
 }
