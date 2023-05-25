@@ -504,9 +504,10 @@ void Parser::initPredictTable()
 		NonTerminalType::VAR_ID_MORE,
 		{ TokenType::SEMICOLON },
 		std::function<void()>(
-			[]
+			[this]
 			{
 				std::cout << "Call process 37\n";
+				//printTree(root, 0);
 			}
 				)
 	);
@@ -1635,8 +1636,10 @@ void Parser::process33()
 		GetNonTerminal(NonTerminalType::TYPE_DEF)
 					});
 	currentP = (ASTNodeBase*)GetASTDecNode();
+	tempDecKindPtr = (ASTDecKind*)currentP;
 	linkStackTop(currentP);
 	ASTStack.push(&currentP->sibling);
+	//printTree(root, 0);
 }
 /*
 处理变量声明的若干个标识符，将当前标识符的名字，存入节点中，

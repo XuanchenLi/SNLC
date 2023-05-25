@@ -146,6 +146,7 @@ ASTExpNode* GetASTExpNode(ASTEXPKind k)
 ASTDecNode* GetASTDecNode()
 {
     ASTDecNode* res = new ASTDecNode();
+    res->decAttr.procAttr.paramType = ASTParamType::NOT_PARAM;
     res->nodeBase.nodeKind = ASTNodeKind::DEC_K;
     return res;
 }
