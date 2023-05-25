@@ -259,7 +259,7 @@ void printStmtK(std::ostream& os, const ASTNodeBase& t)
 void printExpK(std::ostream& os, const ASTNodeBase& t)
 {
     const ASTExpNode* tmp = (const ASTExpNode*)&t;
-    os << ExpKindName(tmp->expKind) << " ";
+    os << ExpKindName(tmp->expKind)<<" ";
     if (tmp->expKind == ASTEXPKind::CONST_K)
     {
         os << std::to_string(tmp->expAttr.val) << " ";

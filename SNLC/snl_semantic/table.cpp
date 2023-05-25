@@ -23,13 +23,13 @@ Table::DestroyTable() {
 	this->scope.pop_back();
 }
 
-bool Table::Enter(char* Id, AttributelR* AttribP, symTablePtr *Entry) {
+bool Table::Enter(char* Id, AttributelR* AttribP, symTablePtr Entry) {
 	/*
 		将标识符名，标识符属性登记在符号表中，登记成功，返回值为
 		真，Entry指向登记的标识符在符号表中的位置；登记不成功，返回
 		值为假，Entry值为空。
 	*/
-	if (FindEntry(Id, true, *Entry)) {
+	if (FindEntry(Id, true, Entry)) {
 		//多次声明错误
 		std::cout << Id << " 重复声明" << endl;
 		return false;
@@ -44,11 +44,11 @@ bool Table::Enter(char* Id, AttributelR* AttribP, symTablePtr *Entry) {
 	std::vector<symTablePtr> table=this->scope.at(this->Level - 1);
 	table.push_back(item);
 
-	*Entry = item;
+	Entry = item;
 	return true;
 }
 
-bool Table::FindEntry(char* id, bool diraction, symTablePtr* Entry) {
+bool Table::FindEntry(char* id, bool diraction, symTablePtr Entry) {
 	/*
 		direction为真是向底部查找，为假向顶部查找
 		根据flag的值为one还是total,决定在当前符号表中查找标识符，
@@ -66,11 +66,11 @@ bool Table::FindEntry(char* id, bool diraction, symTablePtr* Entry) {
 			if (SearchoneTable(id, level, Entry)) return true;
 		}
 	}
-	*Entry = nullptr;
+	Entry = nullptr;
 	return false;
 }
 
-bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr* Entry) {
+bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr Entry) {
 	/*
 		从表头开始，依次将节点中的标识符名字和id比较是否相同，直
 		到找到此标识符或到达表尾，若找到，返回真值，Entry为标识符
@@ -80,11 +80,11 @@ bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr* Entry) {
 
 	for (int i = 0; i < table.size(); i++) {
 		if (strcmp(table.at(i)->idname, id) == 0) {
-			*Entry = table.at(i);
+			Entry = table.at(i);
 			return true;
 		}
 	}
-	*Entry = nullptr;
+	Entry = nullptr;
 	return false;
 }
 
@@ -174,12 +174,13 @@ void Table::VarDecList(ASTNodeBase* currentP) {
 			return;
 		}
 	}
-	
+
 	std::vector<symTablePtr> table = this->scope.back();
+
 	if (tmp->decKind != ASTDecKind::ARRAY_K)
 	{
 		//数组类型声明的处理
-		
+
 		AttributelR* item = new AttributelR;
 		item->idtype = this->ProcDecPart(currentP);
 		item->kind = arrayTy;
@@ -227,35 +228,130 @@ void Table::ProcDecPart(ASTNodeBase* currentP) {
 	}
 
 	std::vector<symTablePtr> table = this->scope.back();
-	if (tmp->decKind == ASTDecKind::PROC_DEC_K)
-	{
-		//过程名声明的处理
-		AttributelR* item = new AttributelR;
-		item->idtype = nullptr;
-		item->kind = procKind;
-		item->More.level = this->Level;
-		item->More = 0;
-		item->More.size = 1;
-		item->More.param = nullptr;
+	//过程名声明的处理
+	AttributelR* item = new AttributelR;
+	item->idtype = nullptr;
+	item->kind = procKind;
+	item->More.level = this->Level;
+	item->More = 0;
+	item->More.size = 1;
+	item->More.param = nullptr;
 
-		//一个过程的参数就是下一层表的最后两个
-		if (this->scope.size() <= Level) {
-			for (int i = tmp->nodeBase.child[0]->names.size(); i >=0 ; i--) {
-				ParamTable* param = new struct ParamTable;
-				param->entry = i;
-				param->next = item->More.param;
-				item->More.param = param;
+	symTablePtr newsym = new struct symTable;
+	strcpy(newsym->idname, currentP->names.back());
+	table.push_back(newsym);
+
+	//进入子程序
+	this->CreatTable();
+	//回填函数参数
+	item->More.param=this->ParaDecList(currentP->child[0])
+
+}
+
+symTablePtr Table::HeadProcess(ASTNodeBase* currentP) {
+
+	/*
+		在当前层符号表中填写函数标识符的属性；在新层符号表中填写形
+		参标识符的属性。其中过程的大小和代码需以后回填。
+	*/
+
+
+}
+
+ParamTable* Table::ParaDecList(ASTNodeBase* currentP){
+	/*
+		在新的符号表中登记所有形参的表项，构造形参表项的地址表，并
+		使param指向此地址表。
+	*/
+	if (currentP == nullptr) return nullptr;
+
+	const ASTDecNode* tmp = (const ASTDecNode*)&currentP;
+
+	ParamTable* param = new struct ParamTable;
+	param->entry = this->scope.back().size();
+	param->next = ParaDecList(currentP->sibling);
+
+	return param;
+}
+
+void Table::Body(ASTNodeBase* currentP) {
+	/*
+		SNL编译系统的执行体部分即为语句序列，故只需处理语句序列部
+		分。
+	*/
+	const ASTStmtNode* tmp = (const ASTStmtNode*)&currentP;
+	while (tmp != nullptr) {
+		this->statement(tmp);
+	}
+}
+
+void Table::statement(ASTStmtNode*& currentP) {
+	/*
+		根据语法树节点中的kind项判断应该转向处理哪个语句类型函数。
+	*/
+	switch (currentP->stmtKind)
+	{
+	case ASTStmtKind::ASSIGN_K:
+		assignstatement(currentP);
+		break;
+	case:ASTStmtKind::IF_K :
+		ifstatment(currentP);
+		break;
+	case ASTStmtKind::WHILE_K:
+
+		break;
+	case ASTStmtKind::CALL_K :
+
+		break;
+	default:
+		break;
+	}
+}
+
+void Table::assignstatement(ASTStmtNode* currentP) {
+	/*
+		赋值语句的语义分析的重点是检查赋值号两端分量的类型相容性。
+		如果两边非const 检查类型相同，如果一方位const另一方不能为char,数组类型检查elem类型不必为char
+	*/
+	symTablePtr Exp1,Exp2;
+	const ASTExpNode* tmp1 = (const ASTExpNode*)&currentP->nodeBase.child[0];
+	const ASTExpNode* tmp2 = (const ASTExpNode*)&currentP->nodeBase.child[1];
+	if (this->FindEntry(currentP->nodeBase.child[0]->names.back(), true, Exp1) && this->FindEntry(currentP->nodeBase.child[1]->names.back(), true, Exp2)) {
+		if (tmp1->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::CONST_K) {
+			if (Exp1->attrIR.idtype->kind != Exp2->attrIR.idtype->kind) {
+				std::cout << "type unfit" << endl;
+				return;
 			}
+		}
+		else if (tmp1->expKind == ASTEXPKind::CONST_K && tmp2->expKind == ASTEXPKind::CONST_K) {
+			std::cout << "const cant assign" << endl;
+			return;
 		}
 		else {
-			for (int i = tmp->nodeBase.child[0]->names.size(); i >= 0; i--) {
-				ParamTable* param = new struct ParamTable;
-				param->entry = i+this->scope.at(this->Level+1-1).size();
-				param->next = item->More.param;
-				item->More.param = param;
+			if (tmp1->expKind == ASTEXPKind::CONST_K) {
+				if (Exp2->attrIR.idtype->kind == arrayTy&&Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind==charTy) {
+					std::cout << "array elemtype unfit" << endl;
+					return;
+				}
+				else if (Exp2->attrIR.idtype->kind == charTy) {
+					std::cout << "type unfit" << endl;
+					return;
+				}
+			}
+			else {
+				if (Exp1->attrIR.idtype->kind == charTy) {
+					std::cout << "type unfit" << endl;
+					return;
+				}
 			}
 		}
+
 	}
+}
+
+void Table::ifstatment(ASTStmtNode* currentP) {
+
+
 }
 
 void Table:: Analyze(ASTNodeBase* currentP) {
@@ -266,7 +362,6 @@ void Table:: Analyze(ASTNodeBase* currentP) {
 	{
 
 	case ASTNodeKind::PRO_K:
-		this->CreatTable();
 		for (int i = 0; i < 3; ++i) {
 			this->Analyze(currentP->child[i]);
 		}
@@ -285,22 +380,30 @@ void Table:: Analyze(ASTNodeBase* currentP) {
 		break;
 	case ASTNodeKind::PROC_K:
 		//处理过程声明
-		this->Analyz(currentP->child[0]);
-		break;
-	case ASTNodeKind::STM_L_K:
 		this->Analyze(currentP->child[0]);
 		break;
+	case ASTNodeKind::STM_L_K:
+		this->Body(currentP->child[0]);
+		break;
 	case ASTNodeKind::DEC_K:
-		//处理变量声明
-		for (int i = 0; i < 3; ++i) {
-			this->Analyze(currentP->child[i]);
+		const ASTDecNode* tmp = (const ASTDecNode*)&currentP;
+		if (tmp->decKind == ASTDecKind::PROC_DEC_K) {
+			//处理过程
+			this->ProcDecPart(currentP);
+			for (int i = 1; i < 3; i++) {
+				this->Analyze(currentP->child[i]);
+			}
+			this->Analyze(currentP->sibling);
+			//子过程回退
+			this->DestroyTable();
 		}
-		this->Analyze(currentP->sibling);
-		break;
-	case ASTNodeKind::STMT_K:
-		
-		break;
-	case ASTNodeKind::EXP_K:
+		else{
+			//处理变量声明
+			for (int i = 0; i < 3; ++i) {
+				this->Analyze(currentP->child[i]);
+			}
+			this->Analyze(currentP->sibling);
+		}
 		break;
 	default:
 		break;

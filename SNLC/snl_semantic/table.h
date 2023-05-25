@@ -25,14 +25,22 @@ protected:
 	void TypeDecPart(ASTNodeBase* currentP);
 	void VarDecList(ASTNodeBase* currentP);
 	void ProcDecPart(ASTNodeBase* currentP);
+	symTablePtr HeadProcess(ASTNodeBase* currentP);
+	ParamTable *ParaDecList(ASTNodeBase* currentP);
+	void Body(ASTNodeBase* currentP);
+	void statement(ASTStmtNode* currentP);
+	TypeIR* Expr(ASTNodeBase* currentP, AccessKind* Ekind);
+	void assignstatement(ASTStmtNode* currentP);
+	void ifstatment(ASTStmtNode* currentP);
+	void whilestatement(ASTStmtNode* currentP);
 public:
 	void CreatTable();												//建一个符号表
 	void DestroyTable();											//撤销一个符号表
-	bool Enter(char* Id, AttributelR* AttribP, symTablePtr* Entry);	//登记标识符和属性到符号表
-	bool FindEntry(char* id, bool diraction, symTablePtr* Entry);				//号表中查找标识符
+	bool Enter(char* Id, AttributelR* AttribP, symTablePtr Entry);	//登记标识符和属性到符号表
+	bool FindEntry(char* id, bool diraction, symTablePtr Entry);				//号表中查找标识符
 	void PrintSymbTabl() {};														//打印符号表
 private:
-	bool SearchoneTable(char* id, int currentLevel, symTablePtr* Entry);			//号表中查找标识符
+	bool SearchoneTable(char* id, int currentLevel, symTablePtr Entry);			//号表中查找标识符
 
 
 };

@@ -33,8 +33,9 @@ typedef struct typeIR {
 	TypeKind kind;
 	union {
 		struct {
-			struct typeIR* indexTy;
 			struct typeTR* elemTy;
+			struct typeIR* indexTy;
+			
 		}ArrayAttr;
 		fieldChain* body;
 	}More;
