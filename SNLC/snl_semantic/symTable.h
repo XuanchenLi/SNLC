@@ -1,5 +1,5 @@
 #pragma once
-#define IDNAME_MAX_LEN 10;
+#define IDNAME_MAX_LEN 10
 enum TypeKind{ intTy,charTy,arrayTy,recordTy,boolTy };
 enum IdKind { varKind,procKind,typeKind };
 enum AccessKind { didr,indir };
@@ -33,7 +33,7 @@ typedef struct typeIR {
 	TypeKind kind;
 	union {
 		struct {
-			struct typeTR* elemTy;
+			struct typeIR* elemTy;
 			struct typeIR* indexTy;
 			
 		}ArrayAttr;
@@ -84,3 +84,7 @@ typedef struct symTable {
 };
 
 typedef struct symTable* symTablePtr;
+
+const char* praseTypeKind(TypeKind kind);
+const char* praseIdKind(IdKind kind);
+const char* praseAccess(AccessKind kind);

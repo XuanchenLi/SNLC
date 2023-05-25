@@ -7,6 +7,6 @@
 
 int main()
 {
-    testParser("E:\\SNLC\\SNLC\\tests\\test3.snl");
+    testTable("E:\\SNLC\\SNLC\\tests\\test3.snl");
 }
 

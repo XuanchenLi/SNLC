@@ -148,6 +148,8 @@
     <ClCompile Include="snl_grammar\parser.cpp" />
     <ClCompile Include="snl_grammar\predict.cpp" />
     <ClCompile Include="SNL_Lexer\lexer.cpp" />
+    <ClCompile Include="snl_semantic\symTable.cpp" />
+    <ClCompile Include="snl_semantic\table.cpp" />
     <ClCompile Include="tests\scripts\test.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +161,8 @@
     <ClInclude Include="snl_grammar\parser.h" />
     <ClInclude Include="snl_grammar\predict.h" />
     <ClInclude Include="SNL_Lexer\lexer.h" />
+    <ClInclude Include="snl_semantic\symTable.h" />
+    <ClInclude Include="snl_semantic\table.h" />
     <ClInclude Include="tests\scripts\test.h" />
   </ItemGroup>
   <ItemGroup>

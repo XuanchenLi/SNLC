@@ -45,6 +45,12 @@
     <ClCompile Include="tests\scripts\test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="snl_semantic\symTable.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="snl_semantic\table.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SNL_Lexer\lexer.h">
@@ -72,6 +78,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tests\scripts\test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="snl_semantic\symTable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="snl_semantic\table.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
