@@ -196,7 +196,7 @@ typedef struct ASTDecNode
     ASTNodeBase nodeBase;
     ASTDecKind decKind;     //具体声明类型
     std::string typeName;   //类型为类型标识符表示时有效
-    union
+    struct
     {
         ASTArrayAttr arrayAttr;     //声明数组时有效（decKind为ARRAY_K）
         ASTProcAttr procAttr;   //声明过程参数时有效
