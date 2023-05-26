@@ -15,7 +15,7 @@ class Table {
 	unsigned long int Access;                //·ûºÅ±íÈë¿Ú
 	bool TraceTable;
 public:
-	Table(bool access=true) : Level(0),Access(access),TraceTable() {this->initialize();};
+	Table(bool access=true) : Level(0),Access(0),TraceTable(access) {this->initialize();};
 	~Table();
 public:
 	void Analyze(ASTNodeBase* currentP);

@@ -359,7 +359,12 @@ void Table::statement(ASTNodeBase* currentP) {
 	case ASTStmtKind::CALL_K :
 		this->callstatement(tmp);
 		break;
-	
+	case ASTStmtKind::READ_K:
+		this->readstatemen(currentP);
+		break;
+	case ASTStmtKind::WRITE_K:
+		this->writestatemen(currentP);
+		break;
 	default:
 		break;
 	}
@@ -441,7 +446,7 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 		if (exlL->kind != arrayTy && exlR->kind != arrayTy) {
 			if (exlL->kind != exlR->kind) {
 				throw std::runtime_error(
-					(std::to_string(exp->nodeBase.lineNum) + "different type can not op").c_str()
+					(std::to_string(exp->nodeBase.lineNum) + ": different type can not op").c_str()
 				);
 			} 
 		}
@@ -449,13 +454,13 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 			if (exlR->kind == arrayTy) {
 				if (exlL->More.ArrayAttr.elemTy->kind != exlR->More.ArrayAttr.elemTy->kind) {
 					throw std::runtime_error(
-						(std::to_string(exp->nodeBase.lineNum) + "different type can not op").c_str()
+						(std::to_string(exp->nodeBase.lineNum) + ": different type can not op").c_str()
 					);
 				}
 			}
 			else if (exlL->More.ArrayAttr.elemTy->kind != exlR->kind) {
 				throw std::runtime_error(
-					(std::to_string(exp->nodeBase.lineNum) + "different type can not op").c_str()
+					(std::to_string(exp->nodeBase.lineNum) + ": different type can not op").c_str()
 				);
 			}
 			
@@ -463,7 +468,7 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 		else {
 			if (exlR->More.ArrayAttr.elemTy->kind != exlL->kind) {
 				throw std::runtime_error(
-					(std::to_string(exp->nodeBase.lineNum) + "different type can not op").c_str()
+					(std::to_string(exp->nodeBase.lineNum) + ": different type can not op").c_str()
 				);
 			}
 		}
@@ -528,7 +533,7 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 	else if (tmp1->expKind == ASTEXPKind::OP_K) {
 		//左值不能为表达式
 		throw std::runtime_error(
-			(std::to_string(currentP->nodeBase.lineNum) + " left can not be a Exp").c_str()
+			(std::to_string(currentP->nodeBase.lineNum) + " : left can not be a Exp").c_str()
 		);
 	}
 	if (tmp2->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::OP_K) {
@@ -554,13 +559,13 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 			: Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind;
 		if (exp1!=exp2) {
 			throw std::runtime_error(
-				(std::to_string(currentP->nodeBase.lineNum) + "type unfit").c_str()
+				(std::to_string(currentP->nodeBase.lineNum) + ": type unfit").c_str()
 			);
 		}
 	}
 	else if (tmp1->expKind == ASTEXPKind::CONST_K && tmp2->expKind == ASTEXPKind::CONST_K) {
 		throw std::runtime_error(
-			(std::to_string(currentP->nodeBase.lineNum) + "const can not assign").c_str()
+			(std::to_string(currentP->nodeBase.lineNum) + ": const can not assign").c_str()
 		);
 	}
 	else {
@@ -570,7 +575,7 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 				: Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind;
 			if (exp2 != intTy) {
 				throw std::runtime_error(
-					(std::to_string(currentP->nodeBase.lineNum) + "type unfit").c_str()
+					(std::to_string(currentP->nodeBase.lineNum) + ": type unfit").c_str()
 				);
 			}
 		}
@@ -579,7 +584,7 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 				: Exp1->attrIR.idtype->More.ArrayAttr.elemTy->kind;
 			if (exp1 != intTy) {
 				throw std::runtime_error(
-					(std::to_string(currentP->nodeBase.lineNum) + "type unfit").c_str()
+					(std::to_string(currentP->nodeBase.lineNum) + ": type unfit").c_str()
 				);
 			}
 		}
@@ -595,7 +600,7 @@ void Table::ifstatment(ASTStmtNode* currentP) {
 	TypeIR* item = this->Expr(currentP->nodeBase.child[0]);
 	if (item->kind != boolTy) {
 		throw std::runtime_error(
-			(std::to_string(currentP->nodeBase.lineNum) + " if condition stmt not bool").c_str()
+			(std::to_string(currentP->nodeBase.lineNum) + ": if condition stmt not bool").c_str()
 		);
 	}
 
@@ -613,7 +618,7 @@ void Table::whilestatement(ASTStmtNode* currentP) {
 	TypeIR* item = this->Expr(currentP->nodeBase.child[0]);
 	if (item->kind != boolTy) {
 		throw std::runtime_error(
-			(std::to_string(currentP->nodeBase.lineNum) + "while condition stmt not bool").c_str()
+			(std::to_string(currentP->nodeBase.lineNum) + ": while condition stmt not bool").c_str()
 		);
 	}
 
@@ -645,8 +650,6 @@ void Table::callstatement(ASTStmtNode* currentP) {
 
 	//查询参数是否存在 并进行匹配
 	this->paramstatemnt(procEntry->attrIR.More.param, procEntry->attrIR.More.level, currentP->nodeBase.child[1]);
-	
-	return;
 }
 
 void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP) {
@@ -656,13 +659,13 @@ void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP)
 	if (currentP == nullptr) {
 		if (paramItem != nullptr)
 			throw std::runtime_error(
-				(std::to_string(currentP->lineNum) + "paramters not enough").c_str()
+				(std::to_string(currentP->lineNum) + ": paramters not enough").c_str()
 			);
-		
+		return;
 	}
 	if (paramItem == nullptr) 
 		throw std::runtime_error(
-			(std::to_string(currentP->lineNum) + " too many param").c_str()
+			(std::to_string(currentP->lineNum) + ": too many param").c_str()
 		);
 	const ASTExpNode* param = (const ASTExpNode*)currentP;
 	symTablePtr paramEntry = nullptr;
@@ -671,12 +674,12 @@ void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP)
 	if (this->FindEntry(name, true, paramEntry)) {
 		if (((symTablePtr)paramItem->entry)->attrIR.idtype->kind != paramEntry->attrIR.idtype->kind)
 			throw std::runtime_error(
-				(std::to_string(currentP->lineNum) + " param  not same").c_str()
+				(std::to_string(currentP->lineNum) + ": param  not same").c_str()
 			);
 	}
 	else {
 		throw std::runtime_error(
-			(std::to_string(currentP->lineNum) + " param  not declar").c_str()
+			(std::to_string(currentP->lineNum) + ": param  not declar").c_str()
 		);
 	}
 	this->paramstatemnt(paramItem->next, level, currentP->sibling);
@@ -685,15 +688,31 @@ void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP)
 
 void Table::writestatemen(ASTNodeBase* currentP) {
 	/*
-		检查要读入的变量有无声明和是否为变量。
+		分析写语句中的表达式是否合法。
 	*/
+
+	TypeIR * type=this->Expr(currentP->child[0]);
 }
 
 void Table::readstatemen(ASTNodeBase* currentP) {
 	/*
-		分析写语句中的表达式是否合法。
+		检查要读入的变量有无声明和是否为变量。
 	*/
 
+	ASTStmtNode* tmp = (ASTStmtNode*)currentP;
+
+	symTablePtr Entry = nullptr;
+	char name[IDNAME_MAX_LEN];
+	strcpy(name, tmp->nodeBase.names[0].c_str());
+	if (!this->FindEntry(name, true, Entry))
+		throw std::runtime_error(
+			strcat(name, " not declare")
+		);
+	if (Entry->attrIR.kind != varKind) {
+		throw std::runtime_error(
+			(std::to_string(currentP->lineNum) + ": var can not read").c_str()
+		);
+	}
 }
 
 void Table:: analyze(ASTNodeBase* currentP) {
@@ -702,10 +721,8 @@ void Table:: analyze(ASTNodeBase* currentP) {
 	*/
 	if (currentP == nullptr) return;
 
-
 	switch (currentP->nodeKind)
 	{
-
 	case ASTNodeKind::PRO_K:
 		this->CreatTable();
 		for (int i = 0; i < 3; ++i) {
@@ -792,8 +809,8 @@ void Table::PrintProcDecSym(symTablePtr& Entry){
 void Table::PrintVarDecSym(symTablePtr& Entry) {
 	if (Entry->attrIR.idtype->kind == arrayTy) {
 		std::cout << "|" << Entry->idname << "\t|" << praseIdKind(Entry->attrIR.kind) << "\t|" <<praseTypeKind(Entry->attrIR.idtype->kind)<<
-			"\t|" << praseAccess(Entry->attrIR.VarAttr.access)<< "\t|" << Entry->attrIR.VarAttr.level << "\t|" << Entry->attrIR.VarAttr.off<<std::endl << std::endl <<
-			" param: " <<praseTypeKind(Entry->attrIR.idtype->More.ArrayAttr.elemTy->kind) << 
+			"\t|" << praseAccess(Entry->attrIR.VarAttr.access)<< "\t|" << Entry->attrIR.VarAttr.level << "\t|" << Entry->attrIR.VarAttr.off<<
+			std::endl << std::endl <<" param: " <<praseTypeKind(Entry->attrIR.idtype->More.ArrayAttr.elemTy->kind) << 
 			"\t index: "<< praseTypeKind(Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind);
 	}
 	else {

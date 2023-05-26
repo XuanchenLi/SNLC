@@ -74,15 +74,12 @@ typedef struct {
 
 }AttributelR;
 
-
-
 //·ûºÅ±ísymbTable
 typedef struct symTable {
 	char idname[IDNAME_MAX_LEN];
 	AttributelR attrIR;
 	struct symTable* next;
 }symTable;
-
 typedef struct symTable* symTablePtr;
 
 const char* praseTypeKind(TypeKind kind);
