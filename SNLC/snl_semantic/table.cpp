@@ -28,34 +28,32 @@ void Table::DestroyTable() {
 
 }
 
-bool Table::Enter(char* Id, AttributelR* AttribP, symTablePtr Entry) {
+bool Table::Enter(char* Id, AttributelR* AttribP, symTablePtr &Entry) {
 	/*
 		将标识符名，标识符属性登记在符号表中，登记成功，返回值为
 		真，Entry指向登记的标识符在符号表中的位置；登记不成功，返回
 		值为假，Entry值为空。
 	*/
-	if (FindEntry(Id, true, Entry)) {
+	if (FindEntry(Id, false , Entry)) {
 		//多次声明错误
-		std::cout << Id << " 重复声明" << std::endl;
+		std::cout << Id << " declare twice" << std::endl;
 		return false;
 	}
 
-	symTablePtr item = new struct symTable;
+	symTablePtr item = new symTable();
 	strcpy(item->idname, Id);
 	item->next = nullptr;
 	item->attrIR = *AttribP; //浅拷贝
 	
-
-	std::vector<symTablePtr> table=this->scope.at(this->Level - 1);
-	table.push_back(item);
+	this->scope.at(this->Level - 1).push_back(item);
 
 	Entry = item;
 	return true;
 }
 
-bool Table::FindEntry(char* id, bool diraction, symTablePtr Entry) {
+bool Table::FindEntry(char* id, bool diraction, symTablePtr &Entry) {
 	/*
-		direction为真是向底部查找，为假向顶部查找
+		direction为真是向底部查找，为假在本层内查找
 		根据flag的值为one还是total,决定在当前符号表中查找标识符，
 		还是在scope栈中的所有符号表中查找标识符。
 	*/
@@ -66,22 +64,20 @@ bool Table::FindEntry(char* id, bool diraction, symTablePtr Entry) {
 		}
 	}
 	else {
-		//为假向顶部查找
-		for (int level = 0; level < this->Level - 1; level++) {
-			if (SearchoneTable(id, level, Entry)) return true;
-		}
+		//为假本层内查找
+		if (SearchoneTable(id, this->Level - 1, Entry)) return true;
 	}
 	Entry = nullptr;
 	return false;
 }
 
-bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr Entry) {
+bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr &Entry) {
 	/*
 		从表头开始，依次将节点中的标识符名字和id比较是否相同，直
 		到找到此标识符或到达表尾，若找到，返回真值，Entry为标识符
 		在符号表中的位置，否则，返回值为假。
 	*/
-	std::vector<symTablePtr> table = this->scope.at(currentLevel);
+	std::vector<symTablePtr> &table = this->scope.at(currentLevel);
 
 	for (int i = 0; i < table.size(); i++) {
 		if (strcmp(table.at(i)->idname, id) == 0) {
@@ -93,7 +89,10 @@ bool Table::SearchoneTable(char* id, int currentLevel, symTablePtr Entry) {
 	return false;
 }
 
-
+void Table::Analyze(ASTNodeBase* currentP) {
+	this->analyze(currentP);
+	if (this->Access) this->PrintSymbTabl();
+}
 void Table::initialize() {
 	/*
 		初始化整数类型，字符类型，布尔类型的内部表示说明由于这三种
@@ -122,7 +121,7 @@ TypeIR* Table::TypeProcess(ASTNodeBase* currentP) {
 		类型分析处理。处理语法树的当前节点类型，构造当前类型的内部
 		表示，并将其地址返回给Ptr类型内部表示的地址。
 	*/
-	 ASTDecNode* tmp = (ASTDecNode*)&currentP;
+	 ASTDecNode* tmp = (ASTDecNode*)currentP;
 	switch (tmp->decKind)
 	{
 	case ASTDecKind::ID_K:
@@ -171,40 +170,47 @@ void Table::VarDecList(ASTNodeBase* currentP) {
 		当遇到变量标识符id时，把id登记到符号表中；检查重复性定义；
 		遇到类型时，构造其内部表示。	
 	*/
-	const ASTDecNode* tmp = (const ASTDecNode*)&currentP;
+	const ASTDecNode* tmp = (const ASTDecNode*)currentP;
 	for (int i = 0; i < tmp->nodeBase.names.size(); ++i) {
 		symTablePtr Entry=nullptr;
 		char name[IDNAME_MAX_LEN];
 		strcpy(name, tmp->nodeBase.names[i].c_str());
-		if (this->FindEntry(name, true, Entry)) {
+		if (this->FindEntry(name, false, Entry)) {
 			std::cout << "re declare" << std::endl;
 			return;
 		}
 	}
 
 	currentP->tablePtrs.push_back(this->Access);//回填符号表入口
-	std::vector<symTablePtr> table = this->scope.at(this->Level - 1);
-	if (tmp->decKind != ASTDecKind::ARRAY_K)
+	std::vector<symTablePtr> &table = this->scope.at(this->Level - 1);
+	if (tmp->decKind == ASTDecKind::ARRAY_K)
 	{
 		//数组类型声明的处理
 
-		symTablePtr newsym = new struct symTable;
-		newsym->attrIR.idtype = this->arrayType((ASTDecNode*)&currentP);
-		newsym->attrIR.kind = varKind;
-		newsym->attrIR.VarAttr.access = indir;
-		newsym->attrIR.VarAttr.level = this->Level;
-		newsym->attrIR.VarAttr.off = table.size();
+		AttributelR* item = new AttributelR;
+		item->idtype = this->arrayType((ASTDecNode*)currentP);
+		item->kind = varKind;
+		item->VarAttr.access = indir;
+		item->VarAttr.level = this->Level;
+		item->VarAttr.off = this->scope.at(this->Level - 1).size() == 0 ? 7 :
+			this->scope.at(this->Level - 1).back()->attrIR.VarAttr.off + this->scope.at(this->Level - 1).back()->attrIR.idtype->size;
 
-		strcpy(newsym->idname, tmp->nodeBase.names.back().c_str());
-		table.push_back(newsym);
+		symTablePtr Entry = nullptr;
+		char name[IDNAME_MAX_LEN];
+		strcpy(name, tmp->nodeBase.names.back().c_str());
+		this->Enter(name, item, Entry);
 	}
 	else {
 		//变量声明的处理
 		if (tmp->decKind == ASTDecKind::INTEGER_K) {
 			for (int i = 0; i < tmp->nodeBase.names.size(); ++i) {
 				AttributelR* item = new AttributelR;
-				item->idtype = this->typetabel.find("intTy")->second;
+				item->idtype = this->typetabel["intTy"];
 				item->kind = varKind;
+				item->VarAttr.access = indir;
+				item->VarAttr.level = this->Level;
+				item->VarAttr.off = this->scope.at(this->Level - 1).size() == 0 ? 7 : 
+					this->scope.at(this->Level - 1).back()->attrIR.VarAttr.off + this->scope.at(this->Level - 1).back()->attrIR.idtype->size;
 
 				symTablePtr Entry = nullptr;
 				char name[IDNAME_MAX_LEN];
@@ -215,8 +221,12 @@ void Table::VarDecList(ASTNodeBase* currentP) {
 		else {
 			for (int i = 0; i < tmp->nodeBase.names.size(); ++i) {
 				AttributelR* item = new AttributelR;
-				item->idtype = this->typetabel.find("charTy")->second;
+				item->idtype = this->typetabel["charTy"];
 				item->kind = varKind;
+				item->VarAttr.access = indir;
+				item->VarAttr.level = this->Level;
+				item->VarAttr.off = this->scope.at(this->Level - 1).size() == 0 ? 7 :
+					this->scope.at(this->Level - 1).back()->attrIR.VarAttr.off + this->scope.at(this->Level - 1).back()->attrIR.idtype->size;
 
 				symTablePtr Entry = nullptr;
 				char name[IDNAME_MAX_LEN];
@@ -232,19 +242,18 @@ void Table::ProcDecPart(ASTNodeBase* currentP) {
 		在当前层符号表中填写过程标识符的属性；在新层符号表中填写形
 		参标识符的属性。
 	*/
-	const ASTDecNode* tmp = (const ASTDecNode*)&currentP;
+	const ASTDecNode* tmp = (const ASTDecNode*)currentP;
 	for (int i = 0; i < tmp->nodeBase.names.size(); ++i) {
 		symTablePtr Entry=nullptr;
 		char name[IDNAME_MAX_LEN];
 		strcpy(name, tmp->nodeBase.names[i].c_str());
-		if (this->FindEntry(name, true, Entry)) {
+		if (this->FindEntry(name, false, Entry)) {
 			std::cout << "re declare" << std::endl;
 			return;
 		}
 	}
 
 	currentP->tablePtrs.push_back(this->Access);//回填符号表入口
-	std::vector<symTablePtr> table = this->scope.at(this->Level - 1);
 	//过程名声明的处理
 	AttributelR* item = new AttributelR;
 	item->idtype = nullptr;
@@ -253,14 +262,15 @@ void Table::ProcDecPart(ASTNodeBase* currentP) {
 	item->More.size = 1;
 	item->More.param = nullptr;
 
-	symTablePtr newsym = new struct symTable;
-	strcpy(newsym->idname, currentP->names.back().c_str());
-	table.push_back(newsym);
+	symTablePtr Entry = nullptr;
+	char name[IDNAME_MAX_LEN];
+	strcpy(name, currentP->names.back().c_str());
+	this->Enter(name, item, Entry);
 
 	//进入子程序
 	this->CreatTable();
 	//回填函数参数
-	item->More.param = this->ParaDecList(currentP->child[0]);
+	Entry->attrIR.More.param = this->ParaDecList(currentP->child[0]);
 
 }
 
@@ -282,8 +292,8 @@ ParamTable* Table::ParaDecList(ASTNodeBase* currentP){
 	if (currentP == nullptr) return nullptr;
 	this->VarDecList(currentP);//加入table
 
-	ParamTable* param = new struct ParamTable;
-	param->entry = this->scope.at(this->Level - 1).size()-1;
+	ParamTable* param = new  ParamTable();
+	param->entry = (void*)this->scope.at(this->Level - 1).at(this->scope.at(this->Level - 1).size()-1);
 	param->next = ParaDecList(currentP->sibling);
 
 	return param;
@@ -305,17 +315,21 @@ void Table::statement(ASTNodeBase* currentP) {
 	/*
 		根据语法树节点中的kind项判断应该转向处理哪个语句类型函数。
 	*/
-	ASTStmtNode* tmp = ( ASTStmtNode*)&currentP;
+	ASTStmtNode* tmp = ( ASTStmtNode*)currentP;
 	switch (tmp->stmtKind)
 	{
 	case ASTStmtKind::ASSIGN_K:
 		this->assignstatement(tmp);
 		break;
 	case ASTStmtKind::IF_K:
+		//std::cout << "if:" << std::endl;
 		this->ifstatment(tmp);
+		//std::cout << "endif" <<std::endl;
 		break;
 	case ASTStmtKind::WHILE_K:
+		//std::cout << "while:" << std::endl;
 		this->whilestatement(tmp);
+		//std::cout << "endwhile:" << std::endl;
 		break;
 	case ASTStmtKind::CALL_K :
 		this->callstatement(tmp);
@@ -337,26 +351,37 @@ TypeIR* Table::arrayVar(ASTNodeBase* currentP) {
 	if (this->FindEntry(name, true, Entry)) {
 
 		//判断是否为数组
-		if (Entry->attrIR.kind != arrayTy) {
+		if (Entry->attrIR.idtype->kind != arrayTy) {
 			std::cout << currentP->names.back() << " id not array" << std::endl;
 			return nullptr;
 		}
 
 		//判断下标类型
-		const ASTExpNode* exp = (const ASTExpNode*)&currentP->child[0];
-		if (exp->expKind == ASTEXPKind::CONST_K&&Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind!=intTy){
-			std::cout << currentP->names.back() << " index type incorrect" << std::endl;
-			return nullptr;
-		}
-		else if (exp->expKind == ASTEXPKind::ID_K) {
-			symTablePtr indexEntry = nullptr;
-			char name[IDNAME_MAX_LEN];
-			strcpy(name, exp->nodeBase.names[0].c_str());
-			if (this->FindEntry(name, true, indexEntry)) {
-				std::cout << exp->nodeBase.names.back() << " not declare" << std::endl;
+		const ASTExpNode* exp = (const ASTExpNode*)currentP->child[0];
+		if (exp->expKind != ASTEXPKind::OP_K) {
+			//非表达式检测下标
+			if (exp->expKind == ASTEXPKind::CONST_K && Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind != intTy) {
+				std::cout << currentP->names.back() << " index type incorrect" << std::endl;
 				return nullptr;
 			}
-			if (indexEntry->attrIR.kind != Entry->attrIR.kind) {
+			else if (exp->expKind == ASTEXPKind::ID_K) {
+				symTablePtr indexEntry = nullptr;
+				char name[IDNAME_MAX_LEN];
+				strcpy(name, exp->nodeBase.names[0].c_str());
+				if (!this->FindEntry(name, true, indexEntry)) {
+					std::cout << exp->nodeBase.names.back() << " not declare" << std::endl;
+					return nullptr;
+				}
+				if (indexEntry->attrIR.kind != Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind) {
+					std::cout << currentP->names.back() << " index type incorrect" << std::endl;
+					return nullptr;
+				}
+			}
+		}
+		else {
+			//是表达式进行递归操作
+			TypeIR* idtype = this->Expr(currentP->child[0]);
+			if (idtype->kind != Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind) {
 				std::cout << currentP->names.back() << " index type incorrect" << std::endl;
 				return nullptr;
 			}
@@ -367,7 +392,6 @@ TypeIR* Table::arrayVar(ASTNodeBase* currentP) {
 		std::cout << currentP->names.back() << " not declare" << std::endl;
 		return nullptr;
 	}
-	
 	return Entry->attrIR.idtype;
 }
 
@@ -376,7 +400,7 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 		表达式语义分析的重点是检查运算分量的类型相容性，求表达式的
 		类型。其中参数Ekind用来表示实参是变参还是值参。
 	*/
-	const ASTExpNode* exp = (const ASTExpNode*)&currentP;
+	const ASTExpNode* exp = (const ASTExpNode*)currentP;
 
 	if (exp->expKind == ASTEXPKind::OP_K) {
 		TypeIR* exlL = this->Expr(currentP->child[0]);
@@ -386,7 +410,7 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 			if (exlL->kind != exlR->kind) {
 				std::cout << "different type can not op" << std::endl;
 				exit(1);
-			}
+			} 
 		}
 		else if (exlL->kind == arrayTy) {
 			if (exlR->kind == arrayTy) {
@@ -415,12 +439,12 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 			return typeir;
 		}
 		else if (exp->expAttr.op == ASTOpType::MINUS || exp->expAttr.op == ASTOpType::PLUS
-			|| exp->expAttr.op == ASTOpType::PLUS || exp->expAttr.op == ASTOpType::OVER) {
+			|| exp->expAttr.op == ASTOpType::TIMES || exp->expAttr.op == ASTOpType::OVER) {
 			
 			TypeIR* typeir = new TypeIR;
 			if (exlL->kind == arrayTy) typeir->kind = exlL->More.ArrayAttr.elemTy->kind;
 			else typeir->kind = exlL->kind;
-			return exlL;
+			return typeir;
 		}
 	}
 	else if(exp->expKind == ASTEXPKind::ID_K){
@@ -430,15 +454,14 @@ TypeIR* Table::Expr(ASTNodeBase* currentP) {
 		strcpy(name, exp->nodeBase.names[0].c_str());
 		this->FindEntry(name, true, ptr);
 		
+		//数组类型需要检测下标
+		if (ptr->attrIR.idtype->kind == arrayTy) this->arrayVar(currentP);
 		return ptr->attrIR.idtype;
 	}
 	else {
 		//默认const都是整形常数
-		TypeIR* typeir = new TypeIR;
-		typeir->kind = intTy;
-		return typeir;
+		return this->typetabel["intTy"];
 	}
-	
 }
 
 void Table::assignstatement(ASTStmtNode* currentP) {
@@ -447,46 +470,64 @@ void Table::assignstatement(ASTStmtNode* currentP) {
 		如果两边非const 检查类型相同，如果一方位const另一方不能为char,数组类型检查elem类型不必为char
 	*/
 	symTablePtr Exp1 = nullptr,Exp2 = nullptr;
-	const ASTExpNode* tmp1 = (const ASTExpNode*)&currentP->nodeBase.child[0];
-	const ASTExpNode* tmp2 = (const ASTExpNode*)&currentP->nodeBase.child[1];
+	const ASTExpNode* tmp1 = (const ASTExpNode*)currentP->nodeBase.child[0];
+	const ASTExpNode* tmp2 = (const ASTExpNode*)currentP->nodeBase.child[1];
 	char name1[IDNAME_MAX_LEN], name2[IDNAME_MAX_LEN];
-	strcpy(name1, currentP->nodeBase.child[0]->names[0].c_str());
-	strcpy(name2, currentP->nodeBase.child[0]->names[1].c_str());
 
-	if (this->FindEntry(name1, true, Exp1) && this->FindEntry(name2, true, Exp2)) {
+	//如果变量检查是否已经声明，如果变量类型是array需要进行数组检验，下标类型是够匹配等等
+	if (tmp1->expKind != ASTEXPKind::CONST_K) {
+		strcpy(name1, currentP->nodeBase.child[0]->names[0].c_str());
+		if (!this->FindEntry(name1, true, Exp1))std::cout << "not declare" << std::endl;
+		if (Exp1->attrIR.idtype->kind == arrayTy) this->arrayVar(currentP->nodeBase.child[0]);
+	}
+	else if (tmp1->expKind == ASTEXPKind::OP_K) {
+		//左值不能为表达式
+		std::cout << "left can not be a Exp" << std::endl;
+		return ;
+	}
+	if (tmp2->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::OP_K) {
+		strcpy(name2, currentP->nodeBase.child[1]->names[0].c_str());
+		if (!this->FindEntry(name2, true, Exp2))std::cout << "not declare" << std::endl;
+		if (Exp2->attrIR.idtype->kind == arrayTy) this->arrayVar(currentP->nodeBase.child[1]);
+	}
+	else if (tmp2->expKind == ASTEXPKind::OP_K) {
+		//右值为表达式
+		Exp2 = new symTable();
+		Exp2->attrIR.idtype=this->Expr(currentP->nodeBase.child[1]);
+	}
 
-		//如果存在array需要检验array EXP
-		if (Exp1->attrIR.kind == arrayTy) this->arrayType(( ASTDecNode*)&currentP->nodeBase.child[0]);
-		if (Exp2->attrIR.kind == arrayTy) this->arrayType(( ASTDecNode*)&currentP->nodeBase.child[1]);
 
-		//检验运算数类型
-		if (tmp1->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::CONST_K) {
-			if (Exp1->attrIR.idtype->kind != Exp2->attrIR.idtype->kind) {
+	//检验运算数类型是否匹配
+	if (tmp1->expKind != ASTEXPKind::CONST_K && tmp2->expKind != ASTEXPKind::CONST_K) {
+		TypeKind exp1 = Exp1->attrIR.idtype->kind != arrayTy ? Exp1->attrIR.idtype->kind 
+			: Exp1->attrIR.idtype->More.ArrayAttr.elemTy->kind;
+		TypeKind exp2 = Exp2->attrIR.idtype->kind != arrayTy ? Exp2->attrIR.idtype->kind 
+			: Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind;
+		if (exp1!=exp2) {
+			std::cout << "type unfit" << std::endl;
+			return;
+		}
+	}
+	else if (tmp1->expKind == ASTEXPKind::CONST_K && tmp2->expKind == ASTEXPKind::CONST_K) {
+		std::cout << "const cant assign" << std::endl;
+		return;
+	}
+	else {
+		if (tmp1->expKind == ASTEXPKind::CONST_K) {
+
+			TypeKind exp2 = Exp2->attrIR.idtype->kind != arrayTy ? Exp2->attrIR.idtype->kind 
+				: Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind;
+			if (exp2 != intTy) {
 				std::cout << "type unfit" << std::endl;
 				return;
 			}
 		}
-		else if (tmp1->expKind == ASTEXPKind::CONST_K && tmp2->expKind == ASTEXPKind::CONST_K) {
-			std::cout << "const cant assign" << std::endl;
-			return;
-		}
 		else {
-			if (tmp1->expKind == ASTEXPKind::CONST_K) {
-				
-				if (Exp2->attrIR.idtype->kind == arrayTy&&Exp2->attrIR.idtype->More.ArrayAttr.elemTy->kind==charTy) {
-					std::cout << "array elemtype unfit" << std::endl;
-					return;
-				}
-				else if (Exp2->attrIR.idtype->kind == charTy) {
-					std::cout << "type unfit" << std::endl;
-					return;
-				}
-			}
-			else {
-				if (Exp1->attrIR.idtype->kind == charTy) {
-					std::cout << "type unfit" << std::endl;
-					return;
-				}
+			TypeKind exp1 = Exp1->attrIR.idtype->kind != arrayTy ? Exp1->attrIR.idtype->kind
+				: Exp1->attrIR.idtype->More.ArrayAttr.elemTy->kind;
+			if (exp1 != intTy) {
+				std::cout << "type unfit" << std::endl;
+				return;
 			}
 		}
 	}
@@ -533,8 +574,8 @@ void Table::callstatement(ASTStmtNode* currentP) {
 		是否正确。
 	*/
 
-	const ASTExpNode* proc = (const ASTExpNode*)&currentP->nodeBase.child[0];
-	const ASTExpNode* param = (const ASTExpNode*)&currentP->nodeBase.child[1];
+	const ASTExpNode* proc = (const ASTExpNode*)currentP->nodeBase.child[0];
+	const ASTExpNode* param = (const ASTExpNode*)currentP->nodeBase.child[1];
 
 	//差询过程名是否存在
 	symTablePtr procEntry = nullptr;
@@ -556,24 +597,22 @@ void Table::paramstatemnt(ParamTable* paramItem,int level,ASTNodeBase* currentP)
 		查询参数是否存在 并进行匹配
 	*/
 	if (currentP == nullptr) {
-		if (paramItem != nullptr)std::cout << "param not emough" << std::endl;
+		if (paramItem != nullptr)std::cout << "param not enough" << std::endl;
 		return;
 	}
-
-	const ASTExpNode* param = (const ASTExpNode*)&currentP;
+	if (paramItem == nullptr) std::cout << "too many param  " << std::endl;
+	const ASTExpNode* param = (const ASTExpNode*)currentP;
 	symTablePtr paramEntry = nullptr;
 	char name[IDNAME_MAX_LEN];
 	strcpy(name, param->nodeBase.names[0].c_str());
-	if (paramItem!=nullptr &&this->FindEntry(name, true, paramEntry)) {
-		if (this->scope.at(level).at(paramItem->entry)->attrIR.kind != paramEntry->attrIR.kind) {
-			std::cout <<  " param  not same" << std::endl;
+	if (this->FindEntry(name, true, paramEntry)) {
+		if (((symTablePtr)paramItem->entry)->attrIR.idtype->kind != paramEntry->attrIR.idtype->kind) {
+			std::cout << " param  not same" << std::endl;
 		}
 	}
 	else {
-		if (paramItem != nullptr)	std::cout << " param  not declare" << std::endl;
-		else std::cout << "too many param  " << std::endl;
+		std::cout << " param  not declare" << std::endl;
 	}
-
 	this->paramstatemnt(paramItem->next, level, currentP->sibling);
 }
 
@@ -591,54 +630,59 @@ void Table::readstatemen(ASTNodeBase* currentP) {
 
 }
 
-void Table:: Analyze(ASTNodeBase* currentP) {
+void Table:: analyze(ASTNodeBase* currentP) {
 	/*
 		语义分析总程序，对语法树进行分析。
 	*/
+	if (currentP == nullptr) return;
+
+
 	switch (currentP->nodeKind)
 	{
 
 	case ASTNodeKind::PRO_K:
+		this->CreatTable();
 		for (int i = 0; i < 3; ++i) {
-			this->Analyze(currentP->child[i]);
+			this->analyze(currentP->child[i]);
 		}
+		this->DestroyTable();
+		this->analyze(currentP->sibling);
 		break;
 	case ASTNodeKind::PHEAD_K:
+
 		break;
 	case ASTNodeKind::TYPE_K:
 		//处理子节点的声明，兄弟结点为VAR_K
-		this->Analyze(currentP->child[0]);
-		this->Analyze(currentP->sibling);
+		this->analyze(currentP->child[0]);
+		this->analyze(currentP->sibling);
 		break;
 	case ASTNodeKind::VAR_K:
 		//处理变量声明，子节点为DEC_K
-		this->Analyze(currentP->child[0]);
-		this->Analyze(currentP->sibling);
+		this->analyze(currentP->child[0]);
+		this->analyze(currentP->sibling);
 		break;
 	case ASTNodeKind::PROC_K:
 		//处理过程声明
-		this->Analyze(currentP->child[0]);
+		this->analyze(currentP->child[0]);
 		break;
 	case ASTNodeKind::STM_L_K:
 		this->Body(currentP->child[0]);
 		break;
 	case ASTNodeKind::DEC_K:
-		if (((const ASTDecNode*)&currentP)->decKind == ASTDecKind::PROC_DEC_K) {
+		if (((const ASTDecNode*)currentP)->decKind == ASTDecKind::PROC_DEC_K) {
 			//处理过程
 			this->ProcDecPart(currentP);
 			for (int i = 1; i < 3; i++) {
-				this->Analyze(currentP->child[i]);
+				this->analyze(currentP->child[i]);
 			}
-			this->Analyze(currentP->sibling);
+			this->analyze(currentP->sibling);
 			//子过程回退
 			this->DestroyTable();
 		}
 		else{
 			//处理变量声明
-			for (int i = 0; i < 3; ++i) {
-				this->Analyze(currentP->child[i]);
-			}
-			this->Analyze(currentP->sibling);
+			this->VarDecList(currentP);
+			this->analyze(currentP->sibling);
 		}
 		break;
 	default:
@@ -650,12 +694,45 @@ void Table::PrintSymbTabl() {
 
 
 	for (int i = 0; i < this->tables.size(); i++) {
-		std::cout << std::endl << "=================================" << std::endl;
-		std::vector<symTablePtr> table = this->tables.at(i);
-		for (int j = 0; j < table.size(); i++) {
-			std::cout << std::endl << "————————————————" << std::endl;
-			std::cout << "|" << table.at(j)->idname << "\t" << praseIdKind(table.at(j)->attrIR.kind) << "\t" << praseTypeKind(table.at(j)->attrIR.idtype->kind);
+		this->PrintHead();
+		std::vector<symTablePtr> &table = this->tables.at(i);
+		for (int j = 0; j < table.size(); j++) {
+			std::cout << std::endl << "———————————————————————" << std::endl;
+			if (table.at(j)->attrIR.kind == varKind) this->PrintVarDecSym(table.at(j));
+			else if (table.at(j)->attrIR.kind == procKind) this->PrintProcDecSym(table.at(j));
 		}
-		std::cout << std::endl << "————————————————" << std::endl;
+		std::cout << std::endl << "———————————————————————" << std::endl;
+	}
+}
+void Table::PrintHead() {
+
+	std::cout << std::endl << "***********************************************" << std::endl;
+	std::cout << "|" << "IDNAME" << "\t|" << "IDKIND" << "\t|" << "TYPEKIND" << "|" <<
+		"ACCESS" << "|" << "LEVEL" << "\t|" << "OFFSET" ;
+	std::cout << std::endl << "***********************************************" ;
+}
+void Table::PrintProcDecSym(symTablePtr& Entry){
+
+	std::cout << "|" << Entry->idname << "\t|" << praseIdKind(Entry->attrIR.kind) << "\t|" << 
+		"\t|" << Entry->attrIR.More.level << "\t|" << Entry->attrIR.More.size<< std::endl;
+	ParamTable* param = Entry->attrIR.More.param;
+	while (param != nullptr) {
+		std::cout << std::endl << " params:" << praseTypeKind(((symTablePtr)param->entry)->attrIR.idtype->kind)
+			<< "\t" << ((symTablePtr)param->entry)->idname;
+		param = param->next;
+	}
+}
+
+void Table::PrintVarDecSym(symTablePtr& Entry) {
+	if (Entry->attrIR.idtype->kind == arrayTy) {
+		std::cout << "|" << Entry->idname << "\t|" << praseIdKind(Entry->attrIR.kind) << "\t|" <<praseTypeKind(Entry->attrIR.idtype->kind)<<
+			"\t|" << praseAccess(Entry->attrIR.VarAttr.access)<< "\t|" << Entry->attrIR.VarAttr.level << "\t|" << Entry->attrIR.VarAttr.off<<std::endl << std::endl <<
+			" param: " <<praseTypeKind(Entry->attrIR.idtype->More.ArrayAttr.elemTy->kind) << 
+			"\t index: "<< praseTypeKind(Entry->attrIR.idtype->More.ArrayAttr.indexTy->kind);
+	}
+	else {
+		std::cout << "|" << Entry->idname << "\t|" << praseIdKind(Entry->attrIR.kind) << "\t|" 
+			<< praseTypeKind(Entry->attrIR.idtype->kind)<<"\t|"<<praseAccess(Entry->attrIR.VarAttr.access)
+			<<"\t|"<<Entry->attrIR.VarAttr.level<<"\t|"<<Entry->attrIR.VarAttr.off;
 	}
 }

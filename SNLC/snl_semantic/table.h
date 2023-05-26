@@ -5,7 +5,7 @@
 #include <vector>
 #include<map>
 #include<string>
-
+#define INIT_OFF 7;
 class Table {
 	std::map<std::string,TypeIR*> typetabel;      //类型表
 	std::vector<std::vector<symTablePtr>> scope;		//分程序表
@@ -14,11 +14,12 @@ class Table {
 	unsigned long int Access;                //符号表入口
 	bool TraceTable;
 public:
-	Table() : Level(0),Access(0),TraceTable(true) {};
+	Table(bool access=true) : Level(0),Access(access),TraceTable() {this->initialize();};
 	~Table();
 public:
 	void Analyze(ASTNodeBase* currentP);
 protected:
+	void analyze(ASTNodeBase* currentP);
 	TypeIR* TypeProcess(ASTNodeBase* currentP);
 	TypeIR* arrayType(ASTDecNode*);
 	TypeIR* nameType(ASTNodeBase* currentP) { return nullptr; };
@@ -44,11 +45,13 @@ protected:
 public:
 	void CreatTable();												//建一个符号表
 	void DestroyTable();											//撤销一个符号表
-	bool Enter(char* Id, AttributelR* AttribP, symTablePtr Entry);	//登记标识符和属性到符号表
-	bool FindEntry(char* id, bool diraction, symTablePtr Entry);				//号表中查找标识符
-	void PrintSymbTabl();														//打印符号表
+	bool Enter(char* Id, AttributelR* AttribP, symTablePtr& Entry);	//登记标识符和属性到符号表
+	bool FindEntry(char* id, bool diraction, symTablePtr& Entry);				//号表中查找标识符												//打印符号表
 private:
-	bool SearchoneTable(char* id, int currentLevel, symTablePtr Entry);			//号表中查找标识符
-
+	void PrintSymbTabl();
+	bool SearchoneTable(char* id, int currentLevel, symTablePtr& Entry);			//号表中查找标识符
+	void PrintProcDecSym(symTablePtr& Entry);
+	void PrintVarDecSym(symTablePtr& Entry);
+	void PrintHead();
 
 };

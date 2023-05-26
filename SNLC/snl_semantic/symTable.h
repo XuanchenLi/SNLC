@@ -45,7 +45,7 @@ typedef struct typeIR {
 //形参信息表
 struct ParamTable
 {
-	unsigned int entry;				//形参在符号表中的位置
+	void* entry;				//形参在符号表中的位置
 	struct ParamTable* next;		//指向下一个表项
 };
 
@@ -81,7 +81,7 @@ typedef struct symTable {
 	char idname[IDNAME_MAX_LEN];
 	AttributelR attrIR;
 	struct symTable* next;
-};
+}symTable;
 
 typedef struct symTable* symTablePtr;
 

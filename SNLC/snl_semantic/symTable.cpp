@@ -14,7 +14,7 @@ const char* praseIdKind(IdKind kind) {
 	switch (kind) {
 
 	case varKind:return "var"; break;
-	case procKind:return "proc"; break;
+	case procKind:return "procdure"; break;
 	case typeKind:return "type"; break;
 
 	}

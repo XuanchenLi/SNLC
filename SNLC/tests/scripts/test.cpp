@@ -1,5 +1,5 @@
 #include "test.h"
-/*
+
 void testLexer(const char* path)
 {
     FileReader fileReader(path);
@@ -32,7 +32,7 @@ void testParser(const char* path)
     }
     
 }
-*/
+
 void testTable(const char* path)
 {
     FileReader fileReader(path);
@@ -50,9 +50,8 @@ void testTable(const char* path)
         std::cout << e.what() << std::endl;
     }
 
-    Table table;
+    Table table(true);
 
     table.Analyze(rt);
-    table.PrintSymbTabl();
 
 }
