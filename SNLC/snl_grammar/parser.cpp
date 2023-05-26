@@ -33,6 +33,7 @@ ASTNodeBase* Parser::parse(TokenList& tokenList)
 					throw std::runtime_error(
 						"ERROR: Unexcept end of tokens."
 					);
+
 				}
 				tokenList.moveNext();
 				currentT = tokenList.getCurToken();

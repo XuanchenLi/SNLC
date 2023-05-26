@@ -5,6 +5,7 @@
 #include <vector>
 #include<map>
 #include<string>
+#include <stdexcept>
 #define INIT_OFF 7;
 class Table {
 	std::map<std::string,TypeIR*> typetabel;      //¿‡–Õ±Ì

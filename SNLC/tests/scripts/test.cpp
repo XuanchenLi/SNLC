@@ -50,8 +50,14 @@ void testTable(const char* path)
         std::cout << e.what() << std::endl;
     }
 
-    Table table(true);
-
-    table.Analyze(rt);
+    try
+    {
+        Table table(true);
+        table.Analyze(rt);
+    }
+    catch (std::exception e)
+    {
+        std::cout << "SEMANTIC ERROR:" << e.what() << std::endl;
+    }
 
 }
