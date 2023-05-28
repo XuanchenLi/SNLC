@@ -8,3 +8,5 @@ void testLexer(const char* path);
 void testParser(const char* path);
 
 void testTable(const char* path);
+
+void testMid(const char* path);
