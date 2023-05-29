@@ -1,5 +1,6 @@
 #pragma once
 #include"mid.h"
+#include<vector>
 typedef struct twotuple {
 	string name;
 	int value;
@@ -11,12 +12,12 @@ class Optimizer {
 	unsigned int point;
 public:
 	Optimizer(vector<Argnode>& t) :table(t),point(0) {};
-
+	void PrintOptimizer(vector<Argnode>&);
 public:
 	void ConstOptimize();
 	bool DivBaseBlock();
 	void OptiBlock();
-	bool searchBlock(ArgRecord&);
+	bool searchBlock(ArgRecord*&);
 	bool addToBlock(string name,int val);
 
 };

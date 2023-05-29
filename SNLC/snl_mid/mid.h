@@ -51,11 +51,10 @@ extern int level;//表示嵌套层级
 
 extern ArgRecord* NewTemp(AccessKind access);//1.1 新建一个临时变量
 extern ArgRecord* ARGValue(int value);//1.2 新建数值类ARG结构
-extern int NewLabel();//1.3 产生一个新的标号
 extern ArgRecord* ARGLabel(int lable);//1.4 新建标号类ARG结构
 extern ArgRecord* ARGAddr(char* id, int level, int Off, AccessKind access);//1.5 创建地址类ARG结构
 extern void PrintMidCode(vector<Argnode>& vec);//1,6 输出中间代码
-extern void GenCode(vector<Argnode>& vec, string codekind, ArgRecord* arg1, ArgRecord* arg2, ArgRecord* arg3);//1.7 生成中间代码 
+extern void GenCode(string codekind, ArgRecord* arg1, ArgRecord* arg2, ArgRecord* arg3);//1.7 生成中间代码 
 
 extern void GenProcDec(ASTNodeBase*);//2.2 过程声明的中间代码生成
 extern void GenBody(ASTNodeBase* t);//2.3 语句体中间代码生成函数
@@ -69,6 +68,7 @@ extern void GenIfS(ASTNodeBase* t);//2.12 条件语句中间代码生成函数
 extern void GenWriteS(ASTNodeBase* t);//2.13 写语句中间代码生成函数
 extern void GenWhileS(ASTNodeBase* t);//2.14 循环语句中间代码生成函数
 //
+//int NewLabel()//1.3 产生一个新的标号 已经合并到1.1中实现
 //extern vector<Argnode>& vec GenMidCode(ASTNodeBase* t);//2.1 中间代码生成主函数
 //extern ArgRecord* GenVar(ASTNodeBase* t);//2.6 变量中间代码生成函数
 //extern ArgRecord* GenExpr(ASTNodeBase* t);//2.9 表达式的中间代码生成函数

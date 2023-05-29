@@ -5,9 +5,8 @@
 
 using namespace std;
 
-vector<Argnode> midtable;
-
-vector<midprintnode> MidPrintNodeTable;
+vector<Argnode> midtable;//ËÄÔªÊ½´æ´¢½á¹¹
+vector<midprintnode> MidPrintNodeTable;//ËÄÔªÊ½Êä³ö±í£¬´æÁË4¸öStringÀàĞÍµÄ±äÁ¿
 
 int lable = 0;//±íÊ¾ÁÙÊ±±äÁ¿±àºÅ
 int level = 0;//±íÊ¾Ç¶Ì×²ã¼¶
@@ -44,13 +43,6 @@ ArgRecord* ARGValue(int value) {//1.2 ĞÂ½¨ÊıÖµÀàARG½á¹¹ //pdfÃèÊö´æÒÉ
     return t;
 }
 
-int NewLabel()//1.3 ²úÉúÒ»¸öĞÂµÄ±êºÅ //ÒÑ¾­ºÏ²¢µ½1.1ÖĞÊµÏÖ
-{
-    // ±àºÅÖµlabel += 1
-    // ·µ»ØĞÂµÄ±àºÅ
-    return 0;
-}
-
 ArgRecord* ARGLabel(int label)//1.4 ĞÂ½¨±êºÅÀàARG½á¹¹
 {
     auto t = new ArgRecord();
@@ -73,7 +65,7 @@ ArgRecord* ARGAddr(const char* id, int level, int off, AccessKind access)//1.5 ´
 }
 
 void PrintMidCode(vector<Argnode>& vec) {//1,6 Êä³öÖĞ¼ä´úÂë
-    cout << "************************************** mid code **************************************" << endl;
+    cout << endl << "************************************** mid code **************************************" << endl;
 
     for (auto& s : MidPrintNodeTable) {
         cout << "( "
@@ -88,12 +80,19 @@ void PrintMidCode(vector<Argnode>& vec) {//1,6 Êä³öÖĞ¼ä´úÂë
     }
 }
 
-void GenCode(vector<Argnode>& vec, string codekind, ArgRecord* arg1, ArgRecord* arg2, ArgRecord* arg3)//1.7 Éú³ÉÖĞ¼ä´úÂë
+void GenCode(string codekind, ArgRecord* arg1, ArgRecord* arg2, ArgRecord* arg3)//1.7 Éú³ÉÖĞ¼ä´úÂë
 {
     string op = codekind;
     string n1 = arg1 ? arg1->name : "-";
     string n2 = arg2 ? arg2->name : "-";
     string n3 = arg3 ? arg3->name : "-";
+
+    Argnode tmp;
+    tmp.codekind = codekind;
+    tmp.Arg1 = arg1;
+    tmp.Arg2 = arg2;
+    tmp.res = arg3;
+    midtable.push_back(tmp);
 
     MidPrintNodeTable.push_back({ op, n1, n2, n3 });
 }
@@ -200,8 +199,7 @@ void GenDeclare(ASTNodeBase* t)//ÓÃÓÚÉú³ÉÉùÃ÷²¿·ÖµÄÖĞ¼ä´úÂë
 
 void GenProcDec(ASTNodeBase* ttt)//2.2 ¹ı³ÌÉùÃ÷µÄÖĞ¼ä´úÂëÉú³É
 {
-    //ASTNodeBase* t = ttt
-    ASTNodeBase* t = ttt->child[0];//×¢Òâ´Ë´¦½á¹¹ÓĞËù²»Í¬
+    ASTNodeBase* t = ttt->child[0];//×¢Òâ´Ë´¦Óï·¨Ê÷½á¹¹ÓĞËù²»Í¬
 
     while (t)
     {
@@ -213,13 +211,12 @@ void GenProcDec(ASTNodeBase* ttt)//2.2 ¹ı³ÌÉùÃ÷µÄÖĞ¼ä´úÂëÉú³É
 
         // ÏÈ´¦ÀíÉùÃ÷£¬Õâ±ßµİ¹é´¦ÀíÉùÃ÷
         if (t->nodeKind == ASTNodeKind::PROC_K) { // ÉùÃ÷ÖĞÇ¶Ì×ÁËº¯ÊıÉùÃ÷
-            // GenCode(midtable, "ENTRY", new ArgRecord(f_name), nullptr, nullptr);
             p_flg = 1;
         }
         auto t1 = t->child[0];// ĞÎ²Î
         auto t2 = t->child[1];// ËùÓĞÉùÃ÷
         auto t3 = t->child[2];// ¹ı³ÌÌå
-        // Õı³£Çé¿öÊÇÉÏÃæÓÒ±ß×¢ÊÍµÄÄÇÑù£¬µ«Êµ¼ÊÉÏ²»ÊÇËùÓĞµÄº¯Êı¶¼»áÓĞÕâÈı¸öµÄ
+        // Õı³£Çé¿öÊÇÉÏÃæÓÒ±ß×¢ÊÍµÄÄÇÑù£¬µ«Êµ¼ÊÉÏ²»ÊÇËùÓĞµÄº¯Êı¶¼»áÓĞÕâÈı¸öchild
 
         // Ò»¹²ËÄÖÖÇé¿ö
         // ÎŞ²ÎÊı ÎŞÉùÃ÷
@@ -242,16 +239,14 @@ void GenProcDec(ASTNodeBase* ttt)//2.2 ¹ı³ÌÉùÃ÷µÄÖĞ¼ä´úÂëÉú³É
         }
         // ÓĞ²ÎÊı ÓĞÉùÃ÷
         else if (t1 && t1->nodeKind == ASTNodeKind::DEC_K && t2 && t3 && t3->nodeKind == ASTNodeKind::STM_L_K) {
-            // cout << NodePrintInfo(t2) << endl;
             GenDeclare(t2->child[0]);
-            GenDeclare(t2); // ¼ÓÕâ¸öÊÇÒòÎªÈç¹ûÔÚ"ÓĞ²ÎÊıÓĞÉùÃ÷"µÄÇé¿öÏÂ, t2µÄsiblingÓĞ¿ÉÄÜÊÇ»áÓĞÁíÍâµÄº¯ÊıÉêÃ÷ÔÚ
-            // GenDeclare(t2->child[1]);
+            GenDeclare(t2); // ¼ÓÕâ¸öÊÇÒòÎªÈç¹ûÔÚ"ÓĞ²ÎÊıÓĞÉùÃ÷"µÄÇé¿öÏÂ, t2µÄsiblingÓĞ¿ÉÄÜÊÇ»áÓĞÁíÍâµÄº¯ÊıÉêÃ÷
             GenBody(t3, f_name);
         }
 
         if (p_flg) {
             // Ö®Ç°´´½¨¹ıº¯ÊıµÄÈë¿Ú
-            // GenCode(midtable, "ENDPROC", new ArgRecord(f_name), nullptr, nullptr);
+            GenCode("ENDPROC", new ArgRecord(f_name), nullptr, nullptr);//´Ë´¦±¾×¢ÊÍµô
         }
         t = t->sibling; // ±éÀúÊ£ÏÂµÄº¯ÊıÉùÃ÷
     }
@@ -286,13 +281,13 @@ void GenBody(ASTNodeBase* t, string f_name)//ÖØÔØ2.3 ÓÃÓÚÉú³É³ÌĞòÌå²¿·ÖµÄÖĞ¼ä´úÂ
     // Ö¸ÏòµÚÒ»¸öÓï¾ä
     ASTNodeBase* t_sib = t->child[0];
     // Ñ­»·´¦ÀíÃ¿Ò»¸öbodyÀïµÄÓï¾ä
-    GenCode(midtable, "ENTRY", new ArgRecord(f_name), nullptr, nullptr);
+    GenCode("ENTRY", new ArgRecord(f_name), nullptr, nullptr);
     while (t_sib)
     {
         GenStatement(t_sib);
         t_sib = t_sib->sibling;
     }
-    GenCode(midtable, "ENDPROC", new ArgRecord(f_name), nullptr, nullptr);
+    GenCode("ENDPROC", new ArgRecord(f_name), nullptr, nullptr);
     --level;
 }
 
@@ -303,7 +298,7 @@ void GenStatement(ASTNodeBase* t)//2.4 Óï¾äµÄÖĞ¼ä´úÂëÉú³Éº¯Êı
     // Ò»¸öÓï¾ä
     if (t->nodeKind == ASTNodeKind::STMT_K)
     {
-        ASTStmtNode* tmp = (ASTStmtNode*)t; 
+        ASTStmtNode* tmp = (ASTStmtNode*)t;
         ASTStmtKind operation = tmp->stmtKind;
         if (operation == ASTStmtKind::IF_K)
         {
@@ -331,7 +326,7 @@ void GenStatement(ASTNodeBase* t)//2.4 Óï¾äµÄÖĞ¼ä´úÂëÉú³Éº¯Êı
         }
         else if (operation == ASTStmtKind::RETURN_K)
         {
-            GenCode(midtable, "RETURN", nullptr, nullptr, nullptr);
+            GenCode("RETURN", nullptr, nullptr, nullptr);
         }
         else
         {
@@ -351,8 +346,8 @@ void GenAssignS(ASTNodeBase* t)//2.5 ¸³ÖµÓï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
 
     auto Larg = ProcessQianTao(first);
     auto Rarg = ProcessQianTao(second);
-    // system("pause");
-    GenCode(midtable, "ASSIGN", Rarg, nullptr, Larg);
+
+    GenCode("ASSIGN", Rarg, nullptr, Larg);
 }
 
 ArgRecord* GenArray(ASTNodeBase* t) {//2.7 Êı×é±äÁ¿µÄÖĞ¼ä´úÂëÉú³Éº¯Êı
@@ -375,20 +370,8 @@ ArgRecord* GenArray(ASTNodeBase* t) {//2.7 Êı×é±äÁ¿µÄÖĞ¼ä´úÂëÉú³Éº¯Êı
         }
     }
 
-    //for (symTablePtr current = Table::; current != nullptr; current = current->next)
-    //{
-    //    auto s_name = current->idname;
-    //    auto s_kind = current->attrIR.kind;
-    //    auto s_type = current->attrIR.idtype;
-    //    if (current->next)
-    //    {
-    //    }
-    //}
-
     if (!tt) {
         cout << "error" << endl;
-        // longjmp(jump_buffer, 1);//Ã»¶®£¬ÏÈ×¢ÊÍµô
-        // exit(0);
     }
 
     ASTDecNode* ntmp = (ASTDecNode*)tt;
@@ -397,22 +380,20 @@ ArgRecord* GenArray(ASTNodeBase* t) {//2.7 Êı×é±äÁ¿µÄÖĞ¼ä´úÂëÉú³Éº¯Êı
 
     string s_low = to_string(n_low);
     ArgRecord* t1 = NewTemp(AccessKind::didr);
-    GenCode(midtable, "-", val, new ArgRecord(s_low), t1);
+    GenCode("-", val, new ArgRecord(s_low), t1);
     ASTDecKind type = ntmp->decAttr.arrayAttr.itemType;
     string stype = "";//°ÑASTDecKindÀàĞÍµÄtype×ªÎªString
     if (type == ASTDecKind::INTEGER_K)
         //stype = "INTEGER_KSize";
         stype = "Size";
     else if (type == ASTDecKind::CHAR_K)
-        //stype = "ChAR_KSize";
+        //stype = "CHAR_KSize";
         stype = "Size";
     ArgRecord* t2 = NewTemp(AccessKind::didr);
     ArgRecord* t3 = NewTemp(AccessKind::didr);
-    GenCode(midtable, "*", t1, new ArgRecord(stype), t2);
-    GenCode(midtable, "[+]", new ArgRecord(arr_name), t2, t3);
+    GenCode("*", t1, new ArgRecord(stype), t2);
+    GenCode("[+]", new ArgRecord(arr_name), t2, t3);
 
-
-    // exit(0);
     return t3;
 }
 
@@ -424,7 +405,7 @@ ArgRecord* GenField(ASTNodeBase* t)//2.8 Óò³ÉÔ±±äÁ¿µÄÖĞ¼ä´úÂëÉú³Éº¯Êı
     auto t_1 = t->child[0];
     auto r = NewTemp(AccessKind::didr);
     string bianlaing = "Off" + GetBehind(t_1);
-    GenCode(midtable, "[+]", new ArgRecord(GetBehind(t)), new ArgRecord(bianlaing), r);
+    GenCode("[+]", new ArgRecord(GetBehind(t)), new ArgRecord(bianlaing), r);
     return r;
 
 }
@@ -440,7 +421,6 @@ ArgRecord* ProcessQianTao(ASTNodeBase* t)//¼¯³ÉÁË2.6 2.9
     // ÔİÊ±Ö»¿¼ÂÇÕâÁ½¸öÇé¿ö,±êÊ¶·û»òÕß³£ÊıÊ±
     if (exp == ASTEXPKind::ID_K || exp == ASTEXPKind::CONST_K)
     {
-        // cout << "½øÈëº¯Êı" << endl;
         ASTVarType yifangwanyi = ntmp->expAttr.varType;
         if (exp == ASTEXPKind::ID_K && yifangwanyi == ASTVarType::ARRAY_MEMB_V) {
             // Èç¹ûÕâ¸öÌõ¼şÂú×ã£¬ËµÃ÷ÊÇÊı×éµÄ¿ªÊ¼£¬ÌØÊâ´¦Àí
@@ -458,8 +438,7 @@ ArgRecord* ProcessQianTao(ASTNodeBase* t)//¼¯³ÉÁË2.6 2.9
     }
     else
     {
-        // ÈçÕâÀïÊÇOpKµÄ»°
-        // ÏÈÈ¥´¦ÀíÁ½¸ö²Ù×÷·ÖÁ¿
+        // ÈçÕâÀïÊÇOpKµÄ»° ÏÈÈ¥´¦ÀíÁ½¸ö²Ù×÷·ÖÁ¿
         auto t1 = ProcessQianTao(t->child[0]);
         auto t2 = ProcessQianTao(t->child[1]);
         // µÃµ½¾ßÌåµÄ²Ù×÷ÊÇÊ²Ã´
@@ -480,7 +459,7 @@ ArgRecord* ProcessQianTao(ASTNodeBase* t)//¼¯³ÉÁË2.6 2.9
             str += "/ ";
 
         auto r = NewTemp(AccessKind::didr); // ´´½¨Ò»¸ötemp½Úµã
-        GenCode(midtable, str, t1, t2, r);
+        GenCode(str, t1, t2, r);
         return r; // °Ñ´´½¨µÄ½Úµã·µ»Ø
     }
 }
@@ -499,18 +478,17 @@ void GenCallS(ASTNodeBase* t)//2.10 ¹ı³Ìµ÷ÓÃÓï¾äµÄÖĞ¼ä´úÂëÉú³Éº¯Êı
         string na = GetBehind(tmp);
 
         // ÔİÊ±ÏÈµ±Êı ²Î´¦Àí
-        // ValACT, t1, offset1, Size1
-        GenCode(midtable, "ValACT", new ArgRecord(na), new ArgRecord(to_string(offset)), new ArgRecord(to_string(1)));
+        GenCode("ValACT", new ArgRecord(na), new ArgRecord(to_string(offset)), new ArgRecord(to_string(1)));
         offset += 1; // Æ«ÒÆÔİÊ±ÏÈµ±1´¦Àí
         tmp = tmp->sibling;
     }
-    GenCode(midtable, "CALL", new ArgRecord(t_1_name), new ArgRecord("true"), new ArgRecord("NULL"));
+    GenCode("CALL", new ArgRecord(t_1_name), new ArgRecord("true"), new ArgRecord("NULL"));
 }
 
 void GenReadS(ASTNodeBase* t)//2.11 ¶ÁÓï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
 {
     auto tmp = ARGAddr((GetBehind(t)).data(), 0, 0, AccessKind::didr);
-    GenCode(midtable, "READC", new ArgRecord(GetBehind(t)), nullptr, nullptr);
+    GenCode("READC", new ArgRecord(GetBehind(t)), nullptr, nullptr);
 }
 
 void GenIfS(ASTNodeBase* t)//2.12 Ìõ¼şÓï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
@@ -519,10 +497,10 @@ void GenIfS(ASTNodeBase* t)//2.12 Ìõ¼şÓï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
         return;
     auto t_1 = t->child[0]; // if(A)µÄAµÄ²¿·Ö
     auto res = ProcessQianTao(t_1);
-    GenCode(midtable, "THEN", res, nullptr, nullptr);
+    GenCode("THEN", res, nullptr, nullptr);
 
     // ifºóelseÇ°µÄ²¿·Ö
-    auto t_2 = t->child[1]; 
+    auto t_2 = t->child[1];
     auto tmp = t_2;
     while (tmp) {
         GenStatement(tmp);
@@ -534,14 +512,14 @@ void GenIfS(ASTNodeBase* t)//2.12 Ìõ¼şÓï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
 
     if (t_3)
     {
-        GenCode(midtable, "ELSE", nullptr, nullptr, nullptr);
+        GenCode("ELSE", nullptr, nullptr, nullptr);
         tmp = t_3;
         while (tmp) {
             GenStatement(tmp);
             tmp = tmp->sibling;
         }
     }
-    GenCode(midtable, "ENDIF", nullptr, nullptr, nullptr);
+    GenCode("ENDIF", nullptr, nullptr, nullptr);
 }
 
 
@@ -549,24 +527,24 @@ void GenWriteS(ASTNodeBase* t)//2.13 Ğ´Óï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
 {
     // auto tmp = GenExpr(t->child[0]);
     auto tmp = ProcessQianTao(t->child[0]);
-    GenCode(midtable, "WRITEC", tmp, nullptr, nullptr);
+    GenCode("WRITEC", tmp, nullptr, nullptr);
 }
 
 // Í¬if
 void GenWhileS(ASTNodeBase* t)//2.14 Ñ­»·Óï¾äÖĞ¼ä´úÂëÉú³Éº¯Êı
 {
-    GenCode(midtable, "WHILE", nullptr, nullptr, nullptr);
+    GenCode("WHILE", nullptr, nullptr, nullptr);
     auto t_1 = t->child[0];
     auto res = ProcessQianTao(t_1);
-    GenCode(midtable, "DO", res, nullptr, nullptr);
+    GenCode("DO", res, nullptr, nullptr);
 
     // while() {A} AµÄ²¿·Ö
-    auto t_2 = t->child[1]; 
+    auto t_2 = t->child[1];
     auto tmp = t_2;
     while (tmp)
     {
         GenStatement(tmp);
         tmp = tmp->sibling;
     }
-    GenCode(midtable, "ENDWHILE", nullptr, nullptr, nullptr);
+    GenCode("ENDWHILE", nullptr, nullptr, nullptr);
 }

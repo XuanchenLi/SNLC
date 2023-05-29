@@ -69,6 +69,7 @@ void testMid(const char* path)
     TokenList tokenList = lexer.genTokens(fileReader);
     Parser parser;
     ASTNodeBase* rt = parser.parse(tokenList);
+    
     try
     {
         ASTNodeBase* rt = parser.parse(tokenList);
@@ -91,4 +92,8 @@ void testMid(const char* path)
 
     ProcessMid(rt);
     PrintMidCode(midtable);
+    std::cout << midtable.size() << std::endl;
+    Optimizer optim(midtable);
+    optim.ConstOptimize();
+    optim.PrintOptimizer(midtable);
 }
