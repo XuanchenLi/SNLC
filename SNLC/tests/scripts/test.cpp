@@ -20,11 +20,14 @@ void testParser(const char* path)
     Lexer lexer;
     TokenList tokenList = lexer.genTokens(fileReader);
     Parser parser;
-    ASTNodeBase* rt = parser.parse(tokenList);
     try
     {
         ASTNodeBase* rt = parser.parse(tokenList);
         parser.printTree(rt, 0);
+    }
+    catch (std::runtime_error e)
+    {
+        std::cout << e.what() << std::endl;
     }
     catch (std::exception e)
     {

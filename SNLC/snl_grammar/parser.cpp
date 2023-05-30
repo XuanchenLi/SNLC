@@ -54,7 +54,20 @@ ASTNodeBase* Parser::parse(TokenList& tokenList)
 			std::function<void()> preFun = predictTable[PredictTableKey(line, col)];
 			symbolStack.pop();
 			//std::cout << "Call predictable table line: " + std::string(NonTerminalTypeName(line)) + " colomn: " + TokenTypeName(col) + "\n";
-			preFun();
+			try
+			{
+				preFun();
+			}
+			catch (std::runtime_error e)
+			{
+				std::cout << e.what() << std::endl;
+				return nullptr;
+			}
+			catch (std::exception e)
+			{
+				std::cout << std::string(TokenTypeName(col)) + " should not after " + NonTerminalTypeName(line) << std::endl;
+				return nullptr;
+			}
 		}
 
 	}
