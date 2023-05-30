@@ -22,7 +22,7 @@ begin
             k := k + 1
         endwh;
         i := i+1
-
+    endwh
 end
 
 begin

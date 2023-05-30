@@ -7,6 +7,8 @@
 
 int main()
 {
-    testMid("E:\\SNLC\\SNLC\\tests\\test3.snl");
+    // testLexer("./tests/test3.snl");
+    //testParser("./tests/test3.snl");
+    testMid("./tests/test3.snl");
 }
 

@@ -71,11 +71,10 @@ void testMid(const char* path)
     Lexer lexer;
     TokenList tokenList = lexer.genTokens(fileReader);
     Parser parser;
-    ASTNodeBase* rt = parser.parse(tokenList);
-    
+    ASTNodeBase* rt = nullptr;
     try
     {
-        ASTNodeBase* rt = parser.parse(tokenList);
+        rt = parser.parse(tokenList);
         parser.printTree(rt, 0);
     }
     catch (std::exception e)
